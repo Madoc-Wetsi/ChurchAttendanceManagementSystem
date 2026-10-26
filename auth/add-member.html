@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Member — First Love Church</title>
+  <link rel="stylesheet" href="../css/shared.css">
+  <link rel="stylesheet" href="../css/auth.css">
+</head>
+<body style="display:block">
+  <div class="auth-wrap">
+    <div class="auth-brand">
+      <span class="mark">F</span>
+      <h1>New member</h1>
+      <p>Add someone to the church register. They will appear straight away on the attendance sheet.</p>
+      <div class="tag">First Love Church · Member Register</div>
+    </div>
+
+    <div class="auth-side">
+      <div class="auth-card">
+        <h2>Add member</h2>
+        <p class="sub">Fill in the details below.</p>
+
+        <form class="auth-form" id="member-form" novalidate>
+          <div class="two">
+            <div class="field">
+              <label for="first">First name</label>
+              <input type="text" id="first" name="first" placeholder="Kwame" autocomplete="given-name">
+            </div>
+            <div class="field">
+              <label for="last">Last name</label>
+              <input type="text" id="last" name="last" placeholder="Mensah" autocomplete="family-name">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="member@example.com" autocomplete="email">
+          </div>
+
+          <div class="field">
+            <label for="phone">Phone</label>
+            <input type="text" id="phone" name="phone" placeholder="024 555 0143" autocomplete="tel">
+          </div>
+
+          <div class="field">
+            <label>Photo (optional)</label>
+            <div class="file-row">
+              <span class="avatar" id="photo-preview">+</span>
+              <label for="photo">Upload a passport photo. JPG or PNG, under 2 MB.</label>
+            </div>
+            <input type="file" id="photo" name="photo" accept="image/*">
+          </div>
+
+          <div class="err" id="member-err" role="alert"></div>
+
+          <button class="btn btn-primary" type="submit">Add member</button>
+          <a class="btn btn-ghost" href="../pages/members.html" style="width:100%">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/store.js"></script>
+  <script src="../js/add-member.js"></script>
+</body>
+</html>

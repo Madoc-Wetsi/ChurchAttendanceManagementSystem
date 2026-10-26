@@ -1,0 +1,33 @@
+/* Members directory styles — shell lives in shared.css */
+
+.name-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.name-cell .avatar {
+  width: 38px;
+  height: 38px;
+  font-size: 13px;
+}
+
+.name-cell .nm {
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.name-cell .joined {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.muted-cell {
+  color: var(--text-muted);
+}
+
+.member-count {
+  font-size: 14px;
+  color: var(--text-muted);
+}

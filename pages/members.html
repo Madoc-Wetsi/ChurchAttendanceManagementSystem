@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Members — First Love Church</title>
+  <link rel="stylesheet" href="../css/shared.css">
+  <link rel="stylesheet" href="../css/members.css">
+</head>
+<body>
+  <aside class="side-bar">
+    <div class="head"><span class="mark">F</span> First Love Church</div>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="attendance.html">Take Attendance</a>
+      <a href="members.html" class="active">Members</a>
+      <a href="export.html">Export</a>
+    </nav>
+    <div class="side-foot">
+      <span id="side-user">Church Admin</span>
+      <a href="../index.html">Sign out</a>
+    </div>
+  </aside>
+
+  <main>
+    <header>
+      <div class="page-title">Members</div>
+      <div class="header-actions">
+        <a class="btn btn-primary" href="../auth/add-member.html">+ Add Member</a>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="toolbar">
+        <div class="field grow">
+          <label for="mem-search">Search</label>
+          <input type="text" id="mem-search" placeholder="Search by name, email or phone…">
+        </div>
+        <div class="field" style="align-self:flex-end">
+          <label>&nbsp;</label>
+          <div class="member-count" id="mem-count">0 members</div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th style="text-align:right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="mem-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="../js/store.js"></script>
+  <script src="../js/members.js"></script>
+</body>
+</html>

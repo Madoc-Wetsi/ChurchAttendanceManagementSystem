@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — First Love Church</title>
+  <link rel="stylesheet" href="../css/shared.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+  <aside class="side-bar">
+    <div class="head"><span class="mark">F</span> First Love Church</div>
+    <nav>
+      <a href="dashboard.html" class="active">Dashboard</a>
+      <a href="attendance.html">Take Attendance</a>
+      <a href="members.html">Members</a>
+      <a href="export.html">Export</a>
+    </nav>
+    <div class="side-foot">
+      <span id="side-user">Church Admin</span>
+      <a href="../index.html">Sign out</a>
+    </div>
+  </aside>
+
+  <main>
+    <header>
+      <div class="page-title">Dashboard</div>
+      <div class="header-actions">
+        <a class="btn btn-white" href="members.html">Members</a>
+        <a class="btn btn-primary" href="attendance.html">Take Attendance</a>
+      </div>
+    </header>
+
+    <div class="content">
+      <section class="card welcome">
+        <div>
+          <div class="eyebrow">Today</div>
+          <h2 id="welcome-name">Welcome back</h2>
+          <p id="welcome-date">—</p>
+        </div>
+        <a class="btn btn-white" href="attendance.html">Start attendance →</a>
+      </section>
+
+      <section class="grid">
+        <div class="card hoverable">
+          <div class="label">Total Members</div>
+          <div class="value" id="stat-total">0</div>
+          <div class="sub">On the church register</div>
+        </div>
+        <div class="card hoverable">
+          <div class="label">Present Today</div>
+          <div class="value" id="stat-present">0</div>
+          <div class="sub" id="stat-present-sub">No service taken yet</div>
+        </div>
+        <div class="card hoverable">
+          <div class="label">Absent Today</div>
+          <div class="value" id="stat-absent">0</div>
+          <div class="sub">Marked absent today</div>
+        </div>
+        <div class="card hoverable">
+          <div class="label">Services Recorded</div>
+          <div class="value" id="stat-services">0</div>
+          <div class="sub">All-time attendance records</div>
+        </div>
+      </section>
+
+      <section class="two-col">
+        <div class="card">
+          <div class="card-title">Today's Attendance</div>
+          <div class="rate-head">
+            <div class="label" style="margin:0">Turnout</div>
+            <div class="pct" id="rate-pct">0%</div>
+          </div>
+          <div class="progress"><span id="rate-bar"></span></div>
+          <div class="rate-note" id="rate-note">Attendance has not been taken for today yet.</div>
+          <div class="quick-links" style="margin-top:18px">
+            <a class="btn btn-primary" href="attendance.html">Take Attendance</a>
+            <a class="btn btn-ghost" href="export.html">Export Record</a>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Recent Services</div>
+          <div id="recent-list"><div class="empty"><strong>Loading…</strong></div></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="../js/store.js"></script>
+  <script src="../js/dashboard.js"></script>
+</body>
+</html>

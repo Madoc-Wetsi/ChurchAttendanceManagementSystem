@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — First Love Church</title>
+  <link rel="stylesheet" href="../css/shared.css">
+  <link rel="stylesheet" href="../css/auth.css">
+</head>
+<body style="display:block">
+  <div class="auth-wrap">
+    <div class="auth-brand">
+      <span class="mark">F</span>
+      <h1>First Love Church</h1>
+      <p>Sign in to take attendance, manage the member register and export service records.</p>
+      <div class="tag">Church Attendance Management System</div>
+    </div>
+
+    <div class="auth-side">
+      <div class="auth-card">
+        <h2>Welcome back</h2>
+        <p class="sub">Enter your details to continue.</p>
+
+        <form class="auth-form" id="login-form" novalidate>
+          <div class="field">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="you@church.org" autocomplete="email">
+          </div>
+
+          <div class="field">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password">
+          </div>
+
+          <div class="err" id="login-err" role="alert"></div>
+
+          <button class="btn btn-primary" type="submit">Sign in</button>
+        </form>
+
+        <p class="auth-alt">No account yet? <a href="register.html">Create one</a></p>
+        <p class="auth-alt"><a href="../index.html">← Back to home</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/store.js"></script>
+  <script src="../js/auth.js"></script>
+</body>
+</html>

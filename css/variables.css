@@ -1,0 +1,39 @@
+/* ---------------------------------------------------------------
+   First Love Church — shared colour system (red & white)
+   Every stylesheet pulls from these tokens so the landing page,
+   dashboard, and forms always look like one product.
+   --------------------------------------------------------------- */
+:root {
+  /* Reds — a real ramp so colours can blend instead of clash */
+  --red-900: #5c0202;  /* deepest, for shadows & gradient ends   */
+  --red-700: #7a0303;  /* dark brand red                         */
+  --red-600: #a90404;  /* PRIMARY church red (kept from original)*/
+  --red-500: #c1121f;  /* brighter accent red                    */
+  --red-100: #fbe3e3;  /* soft red tint for surfaces             */
+  --red-050: #fdf4f4;  /* lightest page background               */
+
+  /* Whites */
+  --white: #ffffff;
+  --off-white: #faf7f7;
+
+  /* Text */
+  --text-dark: #2b1111;
+  --text-muted: #6b5252;
+  --text-on-red: #ffffff;
+
+  /* Functional status colours (used only for present/absent) */
+  --green-700: #1f7a4d;
+  --green-600: #26915c;
+  --green-100: #e3f5ec;
+  --danger-600: #b3261e;
+  --danger-100: #fdeceb;
+
+  /* Shape & elevation */
+  --radius: 14px;
+  --radius-sm: 10px;
+  --shadow-sm: 0 2px 8px rgba(92, 2, 2, 0.08);
+  --shadow-md: 0 10px 30px rgba(92, 2, 2, 0.14);
+
+  /* Typography */
+  --font: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}

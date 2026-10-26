@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Take Attendance — First Love Church</title>
+  <link rel="stylesheet" href="../css/shared.css">
+  <link rel="stylesheet" href="../css/attendance.css">
+</head>
+<body>
+  <aside class="side-bar">
+    <div class="head"><span class="mark">F</span> First Love Church</div>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="attendance.html" class="active">Take Attendance</a>
+      <a href="members.html">Members</a>
+      <a href="export.html">Export</a>
+    </nav>
+    <div class="side-foot">
+      <span id="side-user">Church Admin</span>
+      <a href="../index.html">Sign out</a>
+    </div>
+  </aside>
+
+  <main>
+    <header>
+      <div class="page-title">Take Attendance</div>
+      <div class="header-actions">
+        <a class="btn btn-white" href="members.html">+ Add Member</a>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="toolbar">
+        <div class="field" style="min-width:210px">
+          <label for="att-date">Service date</label>
+          <input type="date" id="att-date">
+        </div>
+        <div class="field grow">
+          <label for="att-search">Search member</label>
+          <input type="text" id="att-search" placeholder="Name, email or phone…">
+        </div>
+        <div class="field" style="align-self:flex-end">
+          <label>&nbsp;</label>
+          <div class="att-actions">
+            <button class="btn btn-ghost" id="btn-all-present" type="button">All present</button>
+            <button class="btn btn-ghost" id="btn-clear" type="button">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="att-summary">
+        <div class="counts">
+          <span><b id="c-present">0</b>Present</span>
+          <span class="absent"><b id="c-absent">0</b>Absent</span>
+          <span><b id="c-unmarked">0</b>Unmarked</span>
+          <span><b id="c-total">0</b>Total</span>
+        </div>
+        <div class="att-actions">
+          <a class="btn btn-white" href="export.html">Export</a>
+          <button class="btn btn-primary" id="btn-save" type="button">Save Attendance</button>
+        </div>
+      </div>
+
+      <div class="att-list" id="att-list"></div>
+    </div>
+  </main>
+
+  <script src="../js/store.js"></script>
+  <script src="../js/attendance.js"></script>
+</body>
+</html>

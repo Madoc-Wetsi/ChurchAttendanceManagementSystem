@@ -1,0 +1,116 @@
+/* Attendance sheet styles — shell lives in shared.css */
+
+.att-list {
+  background: var(--white);
+  border: 1px solid var(--red-100);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.att-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 20px;
+  border-bottom: 1px solid #f6e7e7;
+}
+
+.att-row:last-child {
+  border-bottom: none;
+}
+
+.att-row:hover {
+  background: var(--red-050);
+}
+
+.att-who {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.avatar {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--red-100);
+  color: var(--red-700);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 15px;
+  overflow: hidden;
+  object-fit: cover;
+}
+
+img.avatar {
+  width: 42px;
+  height: 42px;
+}
+
+.att-name {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text-dark);
+}
+
+.att-meta {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.att-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: var(--white);
+  border: 1px solid var(--red-100);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.att-summary .counts {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.att-summary .counts b {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--red-600);
+  line-height: 1.1;
+}
+
+.att-summary .counts span.absent b {
+  color: var(--text-muted);
+}
+
+.att-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .att-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .seg {
+    width: 100%;
+    justify-content: center;
+  }
+}

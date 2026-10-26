@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Export — First Love Church</title>
+  <link rel="stylesheet" href="../css/shared.css">
+  <link rel="stylesheet" href="../css/export.css">
+</head>
+<body>
+  <aside class="side-bar">
+    <div class="head"><span class="mark">F</span> First Love Church</div>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="attendance.html">Take Attendance</a>
+      <a href="members.html">Members</a>
+      <a href="export.html" class="active">Export</a>
+    </nav>
+    <div class="side-foot">
+      <span id="side-user">Church Admin</span>
+      <a href="../index.html">Sign out</a>
+    </div>
+  </aside>
+
+  <main>
+    <header>
+      <div class="page-title">Export</div>
+      <div class="header-actions">
+        <a class="btn btn-white" href="attendance.html">Take Attendance</a>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="export-grid">
+        <div class="card export-panel">
+          <div class="card-title">Export a record</div>
+          <div class="field">
+            <label for="exp-date">Service date</label>
+            <select id="exp-date"></select>
+          </div>
+          <button class="btn btn-primary" id="btn-csv" type="button">Download CSV</button>
+          <button class="btn btn-ghost" id="btn-print" type="button">Print / Save PDF</button>
+          <p class="hint">
+            Choose a recorded service to download. CSV opens in Excel or Google
+            Sheets. Use Print for a paper copy or a PDF.
+          </p>
+        </div>
+
+        <div>
+          <div class="preview-meta">
+            <h3 id="exp-title">Preview</h3>
+            <div class="count" id="exp-count">—</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Member</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="exp-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="../js/store.js"></script>
+  <script src="../js/export.js"></script>
+</body>
+</html>
