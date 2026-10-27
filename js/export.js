@@ -88,7 +88,9 @@
             : '<span class="badge badge-unmarked">Unmarked</span>';
 
         return (
-          "<tr>" +
+          '<tr data-id="' +
+          S.esc(m.id) +
+          '">' +
           '<td><div class="name-cell"><span class="avatar">' +
           S.esc(initials(m)) +
           '</span><div><div class="nm">' +

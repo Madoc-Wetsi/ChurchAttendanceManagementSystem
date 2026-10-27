@@ -78,8 +78,48 @@
   form.last.value = member.last || "";
   form.email.value = member.email || "";
   form.phone.value = member.phone || "";
+  form.location.value = member.location || "";
+  form.bacenta.value = member.bacenta || "";
   form.dob.value = member.dob || "";
   originalPhoto = member.photo || "";
+
+  // Suggest locations (bacenta register + members), and fill the
+  // bacenta dropdown from the Bacentas tab, pre-selecting this member's.
+  fillSuggestions("location-list", S.listLocations());
+  fillBacentaOptions(member.bacenta || "");
+
+  function fillSuggestions(listId, values) {
+    const list = document.getElementById(listId);
+    if (!list) return;
+    list.innerHTML = (values || [])
+      .map(function (v) {
+        return '<option value="' + S.esc(v) + '">';
+      })
+      .join("");
+  }
+
+  function fillBacentaOptions(selected) {
+    const sel = document.getElementById("bacenta");
+    if (!sel) return;
+    const names = S.listBacentaNames();
+    if (selected && names.indexOf(selected) === -1) names.push(selected);
+    sel.innerHTML =
+      '<option value="">No bacenta</option>' +
+      names
+        .sort()
+        .map(function (v) {
+          return (
+            '<option value="' +
+            S.esc(v) +
+            '"' +
+            (v === selected ? " selected" : "") +
+            ">" +
+            S.esc(v) +
+            "</option>"
+          );
+        })
+        .join("");
+  }
 
   if (originalPhoto) preview.innerHTML = '<img class="avatar" src="' + originalPhoto + '" alt="">';
   else updatePreview();
@@ -129,6 +169,8 @@
     const last = form.last.value.trim();
     const email = form.email.value.trim();
     const phone = form.phone.value.trim();
+    const location = form.location.value.trim();
+    const bacenta = form.bacenta.value.trim();
     const ministry = form.ministry.value;
     const dob = form.dob.value;
 
@@ -158,6 +200,8 @@
       last: last,
       email: email,
       phone: phone,
+      location: location,
+      bacenta: bacenta,
       ministry: ministry,
       dob: dob,
     };

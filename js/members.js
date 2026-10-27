@@ -21,7 +21,7 @@
 
     if (!members.length) {
       body.innerHTML =
-        '<tr><td colspan="4"><div class="empty"><strong>' +
+        '<tr><td colspan="7"><div class="empty"><strong>' +
         (total ? "No members match your search" : "No members yet") +
         "</strong>" +
         (total
@@ -52,15 +52,8 @@
           S.esc(S.shortDate(m.joined) || "—") +
           "</div>" +
           "</div></div></td>" +
-          "<td>" +
-          (m.ministry && m.ministry !== "None"
-            ? '<span class="badge badge-ministry">' + S.esc(m.ministry) + "</span>"
-            : '<span class="muted-cell">—</span>') +
-          "</td>" +
           '<td class="muted-cell">' +
-          (dob
-            ? S.esc(dob)
-            : "—") +
+          (dob ? S.esc(dob) : "—") +
           "</td>" +
           '<td class="muted-cell">' +
           (contact.length
@@ -68,6 +61,17 @@
                 return "<div>" + S.esc(c) + "</div>";
               }).join("")
             : "—") +
+          "</td>" +
+          '<td class="muted-cell">' +
+          (m.location ? S.esc(m.location) : "—") +
+          "</td>" +
+          '<td class="muted-cell">' +
+          (m.bacenta ? S.esc(m.bacenta) : "—") +
+          "</td>" +
+          "<td>" +
+          (m.ministry && m.ministry !== "None"
+            ? '<span class="badge badge-ministry">' + S.esc(m.ministry) + "</span>"
+            : '<span class="muted-cell">—</span>') +
           "</td>" +
           '<td><div class="row-actions">' +
           '<a class="btn btn-ghost btn-sm" href="attendance.html">Attendance</a>' +
@@ -87,6 +91,15 @@
     term = e.target.value;
     render();
   });
+
+  // members.html?bacenta=Bacent%203 arrives from the Bacentas tab —
+  // pre-fill the search so only that bacenta's members show.
+  (function () {
+    const wanted = new URLSearchParams(window.location.search).get("bacenta");
+    if (!wanted) return;
+    term = wanted;
+    $("mem-search").value = wanted;
+  })();
 
   // "?added=Jane Doe" / "?updated=Jane Doe" arrive from the member forms
   (function () {

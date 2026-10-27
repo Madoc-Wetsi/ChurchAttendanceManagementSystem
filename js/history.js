@@ -319,4 +319,15 @@
   renderStats();
   renderServices();
   renderMembers();
+
+  /* history.html?member=<id> arrives from the profile card —
+     jump straight to that member's timeline. */
+  (function () {
+    const id = new URLSearchParams(window.location.search).get("member");
+    if (!id || !S.getMember(id)) return;
+
+    const btn = document.querySelector('#hist-tabs button[data-view="members"]');
+    if (btn) btn.click();
+    openMember(id);
+  })();
 })();

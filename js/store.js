@@ -13,6 +13,7 @@ window.ChurchStore = (function () {
     members: "flc_members",
     attendance: "flc_attendance",
     session: "flc_session",
+    bacentas: "flc_bacentas",
   };
 
   /* A church runs two kinds of service, and both need their own
@@ -139,7 +140,8 @@ window.ChurchStore = (function () {
 
     if (attChanged) write(K.attendance, att);
 
-    // Members gained ministry + date of birth; backfill empty values.
+    // Members gained ministry, date of birth, location and bacenta;
+    // backfill empty values.
     const members = read(K.members, []);
     let memChanged = false;
     members.forEach(function (m) {
@@ -151,8 +153,41 @@ window.ChurchStore = (function () {
         m.dob = "";
         memChanged = true;
       }
+      if (m.location === undefined) {
+        m.location = "";
+        memChanged = true;
+      }
+      if (m.bacenta === undefined) {
+        m.bacenta = "";
+        memChanged = true;
+      }
     });
     if (memChanged) write(K.members, members);
+
+    /* Bacentas are their own list now. If members already carry
+       bacenta names (entered before the tab existed), lift them
+       into the list so nothing the user typed is lost. */
+    const bacentas = read(K.bacentas, []);
+    const known = {};
+    bacentas.forEach(function (b) {
+      known[String(b.name || "").toLowerCase()] = 1;
+    });
+    let bacChanged = false;
+    read(K.members, []).forEach(function (m) {
+      const name = String(m.bacenta || "").trim();
+      if (!name) return;
+      const lk = name.toLowerCase();
+      if (known[lk]) return;
+      known[lk] = 1;
+      bacentas.push({
+        id: "b" + uid(),
+        name: name,
+        location: String(m.location || "").trim(),
+        created: key(),
+      });
+      bacChanged = true;
+    });
+    if (bacChanged) write(K.bacentas, bacentas);
   }
 
   try {
@@ -180,6 +215,8 @@ window.ChurchStore = (function () {
       last: String(data.last || "").trim(),
       email: String(data.email || "").trim(),
       phone: String(data.phone || "").trim(),
+      location: String(data.location || "").trim(),
+      bacenta: String(data.bacenta || "").trim(),
       ministry: String(data.ministry || "").trim(),
       dob: String(data.dob || "").trim(),
       photo: data.photo || "",
@@ -207,6 +244,12 @@ window.ChurchStore = (function () {
       last: String(patch.last !== undefined ? patch.last : current.last).trim(),
       email: String(patch.email !== undefined ? patch.email : current.email).trim(),
       phone: String(patch.phone !== undefined ? patch.phone : current.phone).trim(),
+      location: String(
+        patch.location !== undefined ? patch.location : current.location || ""
+      ).trim(),
+      bacenta: String(
+        patch.bacenta !== undefined ? patch.bacenta : current.bacenta || ""
+      ).trim(),
       ministry: String(
         patch.ministry !== undefined ? patch.ministry : current.ministry || ""
       ).trim(),
@@ -247,6 +290,8 @@ window.ChurchStore = (function () {
         (m.first + " " + m.last).toLowerCase().indexOf(q) > -1 ||
         (m.email || "").toLowerCase().indexOf(q) > -1 ||
         (m.phone || "").toLowerCase().indexOf(q) > -1 ||
+        (m.location || "").toLowerCase().indexOf(q) > -1 ||
+        (m.bacenta || "").toLowerCase().indexOf(q) > -1 ||
         (m.ministry || "").toLowerCase().indexOf(q) > -1
       );
     });
@@ -508,11 +553,176 @@ window.ChurchStore = (function () {
     localStorage.removeItem(K.session);
   }
 
+  /* ---------- bacentas ----------
+     A bacenta is a fellowship group members belong to. Stored as
+     their own list so they can be created and managed separately;
+     members only reference them by name.                     */
+  function getBacentas() {
+    return read(K.bacentas, []);
+  }
+
+  function getBacenta(id) {
+    return getBacentas().find(function (b) {
+      return b.id === id;
+    });
+  }
+
+  /* Returns { ok, error?, bacenta? } so the form can show a message. */
+  function addBacenta(data) {
+    const name = String(data.name || "").trim();
+    if (!name) return { ok: false, error: "Bacenta name is required." };
+
+    const bacentas = getBacentas();
+    const dupe = bacentas.some(function (b) {
+      return b.name.toLowerCase() === name.toLowerCase();
+    });
+    if (dupe) return { ok: false, error: '"' + name + '" already exists.' };
+
+    const bacenta = {
+      id: "b" + uid(),
+      name: name,
+      location: String(data.location || "").trim(),
+      created: key(),
+    };
+    bacentas.push(bacenta);
+    write(K.bacentas, bacentas);
+    return { ok: true, bacenta: bacenta };
+  }
+
+  function updateBacenta(id, patch) {
+    const bacentas = getBacentas();
+    const idx = bacentas.findIndex(function (b) {
+      return b.id === id;
+    });
+    if (idx === -1) return null;
+
+    const current = bacentas[idx];
+    const name = String(
+      patch.name !== undefined ? patch.name : current.name
+    ).trim();
+    if (!name) return null;
+
+    const dupe = bacentas.some(function (b) {
+      return b.id !== id && b.name.toLowerCase() === name.toLowerCase();
+    });
+    if (dupe) return null;
+
+    bacentas[idx] = {
+      id: current.id,
+      created: current.created,
+      name: name,
+      location: String(
+        patch.location !== undefined ? patch.location : current.location || ""
+      ).trim(),
+    };
+    write(K.bacentas, bacentas);
+
+    // Renaming must follow through to the members who belong to it,
+    // otherwise they'd be left pointing at a name that no longer exists.
+    if (name.toLowerCase() !== current.name.toLowerCase()) {
+      const members = getMembers();
+      let changed = false;
+      members.forEach(function (m) {
+        if (String(m.bacenta || "").toLowerCase() === current.name.toLowerCase()) {
+          m.bacenta = name;
+          changed = true;
+        }
+      });
+      if (changed) write(K.members, members);
+    }
+
+    return bacentas[idx];
+  }
+
+  /* Removing a bacenta only removes the entry from the list —
+     members keep their history; their bacenta field is cleared. */
+  function deleteBacenta(id) {
+    const target = getBacenta(id);
+    if (!target) return getBacentas();
+
+    write(
+      K.bacentas,
+      getBacentas().filter(function (b) {
+        return b.id !== id;
+      })
+    );
+
+    const members = getMembers();
+    let changed = false;
+    members.forEach(function (m) {
+      if ((m.bacenta || "").toLowerCase() === target.name.toLowerCase()) {
+        m.bacenta = "";
+        changed = true;
+      }
+    });
+    if (changed) write(K.members, members);
+
+    return getBacentas();
+  }
+
+  /* How many members belong to each bacenta, keyed by lowercased name. */
+  function bacentaCounts() {
+    const counts = {};
+    getMembers().forEach(function (m) {
+      const name = String(m.bacenta || "").trim().toLowerCase();
+      if (!name) return;
+      counts[name] = (counts[name] || 0) + 1;
+    });
+    return counts;
+  }
+
+  function searchBacentas(term) {
+    const q = String(term || "").trim().toLowerCase();
+    const bacentas = getBacentas();
+    if (!q) return bacentas;
+    return bacentas.filter(function (b) {
+      return (
+        b.name.toLowerCase().indexOf(q) > -1 ||
+        (b.location || "").toLowerCase().indexOf(q) > -1
+      );
+    });
+  }
+
+  /* Distinct locations across members + bacentas, for suggestions. */
+  function listLocations() {
+    const seen = {};
+    getMembers().forEach(function (m) {
+      const v = String(m.location || "").trim();
+      if (v) seen[v] = 1;
+    });
+    getBacentas().forEach(function (b) {
+      const v = String(b.location || "").trim();
+      if (v) seen[v] = 1;
+    });
+    return Object.keys(seen).sort();
+  }
+
+  /* Distinct bacenta names (list first, then any only on members). */
+  function listBacentaNames() {
+    const out = [];
+    const seen = {};
+    getBacentas().forEach(function (b) {
+      const v = String(b.name || "").trim();
+      if (v && !seen[v.toLowerCase()]) {
+        seen[v.toLowerCase()] = 1;
+        out.push(v);
+      }
+    });
+    getMembers().forEach(function (m) {
+      const v = String(m.bacenta || "").trim();
+      if (v && !seen[v.toLowerCase()]) {
+        seen[v.toLowerCase()] = 1;
+        out.push(v);
+      }
+    });
+    return out.sort();
+  }
+
   /* ---------- export ---------- */
   function toCSV(date, type) {
     type = type || "sunday";
     const rows = [
-      ["Date", "Service", "First Name", "Last Name", "Email", "Phone", "Ministry", "Date of Birth", "Status"],
+      ["Date", "Service", "First Name", "Last Name", "Email", "Phone", "Location", "Bacenta", "Ministry", "Date of Birth", "Status"],
     ];
     const rec = getRecord(date, type);
     getMembers().forEach(function (m) {
@@ -524,6 +734,8 @@ window.ChurchStore = (function () {
         m.last,
         m.email,
         m.phone,
+        m.location || "",
+        m.bacenta || "",
         m.ministry || "",
         m.dob || "",
         status,
@@ -569,6 +781,15 @@ window.ChurchStore = (function () {
     updateMember: updateMember,
     deleteMember: deleteMember,
     searchMembers: searchMembers,
+    getBacentas: getBacentas,
+    getBacenta: getBacenta,
+    addBacenta: addBacenta,
+    updateBacenta: updateBacenta,
+    deleteBacenta: deleteBacenta,
+    bacentaCounts: bacentaCounts,
+    searchBacentas: searchBacentas,
+    listLocations: listLocations,
+    listBacentaNames: listBacentaNames,
     getAttendance: getAttendance,
     getRecord: getRecord,
     setStatus: setStatus,

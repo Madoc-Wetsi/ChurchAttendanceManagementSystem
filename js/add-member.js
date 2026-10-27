@@ -15,6 +15,44 @@
     return '<option value="' + S.esc(m) + '">' + S.esc(m) + "</option>";
   }).join("");
 
+  // Suggest locations from the bacenta register + members, and fill
+  // the bacenta dropdown straight from the Bacentas tab.
+  fillSuggestions("location-list", S.listLocations());
+  fillBacentaOptions("");
+
+  function fillSuggestions(listId, values) {
+    const list = document.getElementById(listId);
+    if (!list) return;
+    list.innerHTML = (values || [])
+      .map(function (v) {
+        return '<option value="' + S.esc(v) + '">';
+      })
+      .join("");
+  }
+
+  function fillBacentaOptions(selected) {
+    const sel = document.getElementById("bacenta");
+    if (!sel) return;
+    const names = S.listBacentaNames();
+    let html = '<option value="">No bacenta</option>';
+    if (selected && names.indexOf(selected) === -1) names.push(selected);
+    html += names
+      .sort()
+      .map(function (v) {
+        return (
+          '<option value="' +
+          S.esc(v) +
+          '"' +
+          (v === selected ? " selected" : "") +
+          ">" +
+          S.esc(v) +
+          "</option>"
+        );
+      })
+      .join("");
+    sel.innerHTML = html;
+  }
+
   const MAX_PHOTO = 2 * 1024 * 1024; // 2 MB
 
   function showErr(msg) {
@@ -74,6 +112,8 @@
     const last = form.last.value.trim();
     const email = form.email.value.trim();
     const phone = form.phone.value.trim();
+    const location = form.location.value.trim();
+    const bacenta = form.bacenta.value.trim();
     const ministry = form.ministry.value;
     const dob = form.dob.value;
 
@@ -99,6 +139,8 @@
       last: last,
       email: email,
       phone: phone,
+      location: location,
+      bacenta: bacenta,
       ministry: ministry,
       dob: dob,
       photo: photoData,

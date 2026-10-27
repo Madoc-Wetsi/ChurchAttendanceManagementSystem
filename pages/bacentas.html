@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bacentas — Firstlove Church, Godokpe Governorship</title>
+  <link rel="stylesheet" href="../css/shared.css">
+  <link rel="stylesheet" href="../css/bacentas.css">
+</head>
+<body>
+  <aside class="side-bar">
+    <div class="head"><span class="mark">F</span> Firstlove Church, Godokpe Governorship</div>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="attendance.html">Take Attendance</a>
+      <a href="members.html">Members</a>
+      <a href="bacentas.html" class="active">Bacentas</a>
+      <a href="history.html">History</a>
+      <a href="export.html">Export</a>
+    </nav>
+    <div class="side-foot">
+      <span id="side-user">Church Admin</span>
+      <a href="../index.html">Sign out</a>
+    </div>
+  </aside>
+
+  <main>
+    <header>
+      <div class="page-title">Bacentas</div>
+      <div class="header-actions">
+        <a class="btn btn-white" href="members.html">Members</a>
+        <a class="btn btn-primary" href="#new-bacenta" id="btn-focus-add">+ Add Bacenta</a>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- Headline numbers -->
+      <section class="grid">
+        <div class="card hoverable">
+          <div class="label">Bacentas</div>
+          <div class="value" id="b-total">0</div>
+          <div class="sub">On the register</div>
+        </div>
+        <div class="card hoverable">
+          <div class="label">Locations</div>
+          <div class="value" id="b-locations">0</div>
+          <div class="sub">Areas covered</div>
+        </div>
+        <div class="card hoverable">
+          <div class="label">Members in Bacentas</div>
+          <div class="value" id="b-assigned">0</div>
+          <div class="sub">Belong to a bacenta</div>
+        </div>
+        <div class="card hoverable">
+          <div class="label">Not Yet Assigned</div>
+          <div class="value" id="b-unassigned">0</div>
+          <div class="sub">Members without a bacenta</div>
+        </div>
+      </section>
+
+      <div class="bac-grid">
+        <!-- Create / add a bacenta -->
+        <div class="card bac-form" id="new-bacenta">
+          <div class="card-title" id="form-title">Add a bacenta</div>
+          <p class="hint" id="form-sub">Give the bacenta a name and, if you like, the area it covers.</p>
+
+          <form id="bacenta-form" novalidate>
+            <div class="field">
+              <label for="bac-name">Bacenta name</label>
+              <input type="text" id="bac-name" placeholder="e.g. Bacent 3">
+            </div>
+            <div class="field">
+              <label for="bac-location">Location <span class="opt">(optional)</span></label>
+              <input type="text" id="bac-location" placeholder="e.g. Ekpan" list="bac-location-list">
+              <datalist id="bac-location-list"></datalist>
+            </div>
+
+            <div class="err" id="bac-err" role="alert"></div>
+
+            <div class="bac-btns">
+              <button class="btn btn-primary" type="submit" id="btn-save-bac">Add Bacenta</button>
+              <button class="btn btn-ghost" type="button" id="btn-cancel-edit" hidden>Cancel</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- View bacentas -->
+        <div class="card bac-list-card">
+          <div class="bac-list-head">
+            <div class="card-title">All bacentas</div>
+            <div class="field" style="margin:0;min-width:200px">
+              <input type="text" id="bac-search" placeholder="Search name or location…" aria-label="Search bacentas">
+            </div>
+          </div>
+
+          <div class="bac-list" id="bac-list"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="../js/store.js"></script>
+  <script src="../js/bacentas.js"></script>
+</body>
+</html>

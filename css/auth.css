@@ -148,6 +148,20 @@
   line-height: 1.5;
 }
 
+/* Small link under a field, e.g. "Create a bacenta →" */
+.link-sm {
+  display: inline-block;
+  margin-top: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--red-600);
+  text-decoration: none;
+}
+
+.link-sm:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 860px) {
   .auth-wrap {
     grid-template-columns: 1fr;
