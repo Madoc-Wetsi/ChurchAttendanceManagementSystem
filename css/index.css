@@ -68,6 +68,31 @@ body {
   margin-bottom: 16px;
 }
 
+/* Second line of the church name, under the main heading */
+.hero .eyebrow-sub {
+  font-size: clamp(15px, 2.4vw, 20px);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.92);
+  margin: -6px 0 18px;
+  position: relative;
+  display: inline-block;
+  padding-bottom: 14px;
+}
+
+.hero .eyebrow-sub::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 54px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+}
+
 /* Accent word picks up the white side of the palette. */
 .hero h1 span {
   color: var(--white);

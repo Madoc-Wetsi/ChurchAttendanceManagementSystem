@@ -57,7 +57,7 @@
     "href",
     "../pages/members.html"
   );
-  document.title = "Edit " + fullName + " — First Love Church";
+  document.title = "Edit " + fullName + " — Firstlove Church, Godokpe Governorship";
 
   /* ---------- ministries ---------- */
   const current = member.ministry || "None";

@@ -43,7 +43,7 @@
     );
 
     // Title reflects which sheet you're on
-    document.title = S.typeShort(type) + " Attendance — First Love Church";
+    document.title = S.typeShort(type) + " Attendance — Firstlove Church, Godokpe Governorship";
   }
 
   function renderCounts() {
