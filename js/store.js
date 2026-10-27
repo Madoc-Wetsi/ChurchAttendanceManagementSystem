@@ -23,18 +23,32 @@ window.ChurchStore = (function () {
     midweek: { id: "midweek", label: "Midweek Service", short: "Midweek" },
   };
 
+  /* Ministry departments, exactly as the church lists them. */
   const MINISTRIES = [
     "Choir",
-    "Ushering",
-    "Sunday School",
-    "Youth",
-    "Media / Technical",
-    "Protocol",
-    "Prayer Warriors",
-    "Finance",
-    "Children's Ministry",
-    "Evangelism",
-    "None",
+    "Worship choir",
+    "Media",
+    "Dancing star",
+    "Airport star",
+    "Instrumentalist",
+    "Ushers",
+    "Door keepers",
+    "Sound",
+    "Film star",
+    "Sheep seeking",
+    "Telepastor",
+  ];
+
+  /* The church's bacentas. Written into the register the first time
+     the app runs (only if nothing was ever stored), so the Bacentas
+     tab and the member dropdown start populated. After that the user
+     owns the list — we never overwrite their edits. */
+  const DEFAULT_BACENTAS = [
+    "Godokpe 1",
+    "Godokpe 2",
+    "Godokpe 3",
+    "Godokpe 4",
+    "Godokpe 5",
   ];
 
   /* ---------- storage helpers ---------- */
@@ -166,7 +180,22 @@ window.ChurchStore = (function () {
 
     /* Bacentas are their own list now. If members already carry
        bacenta names (entered before the tab existed), lift them
-       into the list so nothing the user typed is lost. */
+       into the list so nothing the user typed is lost.
+
+       On the very first run the register gets the church's five
+       bacentas. `getItem` returning null means the key has never
+       been written — once the user has added or deleted entries
+       the stored value exists (even as []) and we leave it alone. */
+    const fresh = localStorage.getItem(K.bacentas) === null;
+    if (fresh) {
+      write(
+        K.bacentas,
+        DEFAULT_BACENTAS.map(function (name) {
+          return { id: "b" + uid(), name: name, location: "", created: key() };
+        })
+      );
+    }
+
     const bacentas = read(K.bacentas, []);
     const known = {};
     bacentas.forEach(function (b) {

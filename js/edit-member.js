@@ -59,19 +59,31 @@
   );
   document.title = "Edit " + fullName + " — Firstlove Church, Godokpe Governorship";
 
-  /* ---------- ministries ---------- */
-  const current = member.ministry || "None";
-  ministrySel.innerHTML = S.MINISTRIES.map(function (m) {
-    return (
-      '<option value="' +
-      S.esc(m) +
-      '"' +
-      (m === current ? " selected" : "") +
-      ">" +
-      S.esc(m) +
-      "</option>"
-    );
-  }).join("");
+  /* ---------- ministries ----------
+     A member may still carry a ministry from the old list. Keep
+     it selectable so opening the form and saving doesn't silently
+     rewrite their ministry. The old "None" entry meant "no
+     ministry", so it maps onto the blank option. */
+  const current = member.ministry === "None" ? "" : member.ministry || "";
+  const ministryOptions = S.MINISTRIES.slice();
+  if (current && ministryOptions.indexOf(current) === -1) {
+    ministryOptions.push(current);
+  }
+  ministrySel.innerHTML =
+    '<option value="">No ministry</option>' +
+    ministryOptions
+      .map(function (m) {
+        return (
+          '<option value="' +
+          S.esc(m) +
+          '"' +
+          (m === current ? " selected" : "") +
+          ">" +
+          S.esc(m) +
+          "</option>"
+        );
+      })
+      .join("");
 
   /* ---------- pre-fill ---------- */
   form.first.value = member.first || "";

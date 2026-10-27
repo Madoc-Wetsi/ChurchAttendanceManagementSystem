@@ -10,10 +10,14 @@
   const ministrySel = document.getElementById("ministry");
   let photoData = "";
 
-  // Populate the ministry list from the shared store
-  ministrySel.innerHTML = S.MINISTRIES.map(function (m) {
-    return '<option value="' + S.esc(m) + '">' + S.esc(m) + "</option>";
-  }).join("");
+  // Populate the ministry list from the shared store.
+  // A blank first option means "no ministry" — the old "None"
+  // entry is no longer part of the church's list.
+  ministrySel.innerHTML =
+    '<option value="">No ministry</option>' +
+    S.MINISTRIES.map(function (m) {
+      return '<option value="' + S.esc(m) + '">' + S.esc(m) + "</option>";
+    }).join("");
 
   // Suggest locations from the bacenta register + members, and fill
   // the bacenta dropdown straight from the Bacentas tab.
