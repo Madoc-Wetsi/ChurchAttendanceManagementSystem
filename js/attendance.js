@@ -222,14 +222,20 @@
     }, 2600);
   }
 
-  // Allow deep-linking a specific sheet: attendance.html?type=midweek
+  // Deep-link a specific sheet: attendance.html?type=midweek&date=2026-10-25
+  // ?date= comes from History's "Reopen sheet" link, so both must be read
+  // before the initial loadRecord().
   const params = new URLSearchParams(window.location.search);
   const wanted = params.get("type");
   if (wanted && S.SERVICE_TYPES[wanted]) {
     type = wanted;
     date = S.defaultDateFor(type);
-    $("att-date").value = date;
   }
+  const wantedDate = params.get("date");
+  if (wantedDate && /^\d{4}-\d{2}-\d{2}$/.test(wantedDate)) {
+    date = wantedDate;
+  }
+  $("att-date").value = date;
 
   loadRecord();
   render();

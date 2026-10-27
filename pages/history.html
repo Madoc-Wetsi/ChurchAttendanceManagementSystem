@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>History — First Love Church</title>
+  <link rel="stylesheet" href="../css/shared.css">
+  <link rel="stylesheet" href="../css/history.css">
+</head>
+<body>
+  <aside class="side-bar">
+    <div class="head"><span class="mark">F</span> First Love Church</div>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="attendance.html">Take Attendance</a>
+      <a href="members.html">Members</a>
+      <a href="history.html" class="active">History</a>
+      <a href="export.html">Export</a>
+    </nav>
+    <div class="side-foot">
+      <span id="side-user">Church Admin</span>
+      <a href="../index.html">Sign out</a>
+    </div>
+  </aside>
+
+  <main>
+    <header>
+      <div class="page-title">Attendance History</div>
+      <div class="header-actions">
+        <a class="btn btn-white" href="export.html">Export</a>
+        <a class="btn btn-primary" href="attendance.html">Take Attendance</a>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- Headline numbers -->
+      <section class="grid" id="hist-stats">
+        <div class="card hoverable">
+          <div class="label">Services Recorded</div>
+          <div class="value" id="h-total">0</div>
+          <div class="sub" id="h-breakdown">—</div>
+        </div>
+        <div class="card hoverable">
+          <div class="label">Total Marks Made</div>
+          <div class="value" id="h-marks">0</div>
+          <div class="sub">Present + absent entries</div>
+        </div>
+        <div class="card hoverable">
+          <div class="label">Average Turnout</div>
+          <div class="value" id="h-avg">—</div>
+          <div class="sub">Across all services</div>
+        </div>
+        <div class="card hoverable">
+          <div class="label">Best Attendance</div>
+          <div class="value" id="h-best">—</div>
+          <div class="sub" id="h-best-sub">No services yet</div>
+        </div>
+      </section>
+
+      <!-- Two views -->
+      <div class="hist-tabs" id="hist-tabs">
+        <button type="button" data-view="services" class="on">By Service</button>
+        <button type="button" data-view="members">By Member</button>
+      </div>
+
+      <!-- ============ BY SERVICE ============ -->
+      <section id="view-services">
+        <div class="toolbar">
+          <div class="field" style="min-width:200px">
+            <label for="h-type">Service type</label>
+            <select id="h-type">
+              <option value="">All services</option>
+              <option value="sunday">Sunday Service</option>
+              <option value="midweek">Midweek Service</option>
+            </select>
+          </div>
+          <div class="field grow">
+            <label for="h-search">Search date</label>
+            <input type="text" id="h-search" placeholder="e.g. October or 2026-10-25…">
+          </div>
+          <div class="field" style="align-self:flex-end">
+            <label>&nbsp;</label>
+            <div class="member-count" id="h-count">0 services</div>
+          </div>
+        </div>
+
+        <div class="hist-list" id="hist-services"></div>
+      </section>
+
+      <!-- ============ BY MEMBER ============ -->
+      <section id="view-members" hidden>
+        <div class="toolbar">
+          <div class="field grow">
+            <label for="h-msearch">Search member</label>
+            <input type="text" id="h-msearch" placeholder="Name, email or ministry…">
+          </div>
+          <div class="field" style="align-self:flex-end">
+            <label>&nbsp;</label>
+            <div class="member-count" id="h-mcount">0 members</div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Member</th>
+                <th>Attended</th>
+                <th>Missed</th>
+                <th>Rate</th>
+                <th>Streak</th>
+                <th>Last Seen</th>
+                <th style="text-align:right">Detail</th>
+              </tr>
+            </thead>
+            <tbody id="hist-members"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Member drill-down -->
+      <div class="hist-panel" id="member-panel" hidden>
+        <div class="hist-panel-head">
+          <div class="who">
+            <span class="avatar" id="mp-avatar">+</span>
+            <div>
+              <div class="name" id="mp-name">—</div>
+              <div class="meta" id="mp-meta">—</div>
+            </div>
+          </div>
+          <button class="btn btn-ghost btn-sm" type="button" id="mp-close">Close</button>
+        </div>
+
+        <div class="hist-panel-stats">
+          <span><b id="mp-attended">0</b>Attended</span>
+          <span><b id="mp-missed">0</b>Missed</span>
+          <span><b id="mp-rate">0%</b>Rate</span>
+          <span><b id="mp-streak">0</b>Current streak</span>
+        </div>
+
+        <div class="hist-timeline" id="mp-timeline"></div>
+      </div>
+    </div>
+  </main>
+
+  <script src="../js/store.js"></script>
+  <script src="../js/history.js"></script>
+</body>
+</html>

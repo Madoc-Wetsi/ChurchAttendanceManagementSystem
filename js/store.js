@@ -379,6 +379,116 @@ window.ChurchStore = (function () {
     return (SERVICE_TYPES[type] || SERVICE_TYPES.sunday).short;
   }
 
+  /* ---------- history ---------- */
+
+  /* Full roster for one service, split by status.
+     Unmarked members are the ones on the register who were never
+     ticked that day — useful for spotting records left incomplete. */
+  function serviceDetail(date, type) {
+    type = type || "sunday";
+    const rec = getRecord(date, type);
+    const present = [];
+    const absent = [];
+    const unmarked = [];
+
+    getMembers().forEach(function (m) {
+      const status = rec[m.id];
+      if (status === "present") present.push(m);
+      else if (status === "absent") absent.push(m);
+      else unmarked.push(m);
+    });
+
+    const s = statsFor(date, type);
+    return {
+      date: date,
+      type: type,
+      label: typeLabel(type),
+      present: present,
+      absent: absent,
+      unmarked: unmarked,
+      stats: s,
+    };
+  }
+
+  /* Every service detail, newest first, optionally one type only. */
+  function serviceHistory(type) {
+    return listServices()
+      .filter(function (svc) {
+        return !type || svc.type === type;
+      })
+      .map(function (svc) {
+        return serviceDetail(svc.date, svc.type);
+      });
+  }
+
+  /* One member's attendance across every service ever taken. */
+  function memberHistory(memberId) {
+    const att = getAttendance();
+    const rows = [];
+
+    Object.keys(att)
+      .sort()
+      .reverse()
+      .forEach(function (date) {
+        Object.keys(att[date]).forEach(function (type) {
+          const status = att[date][type][memberId];
+          if (!status) return;
+          rows.push({
+            date: date,
+            type: type,
+            label: typeLabel(type),
+            status: status,
+          });
+        });
+      });
+
+    const attended = rows.filter(function (r) {
+      return r.status === "present";
+    }).length;
+
+    // Consecutive attended services ending with the most recent one.
+    const chronological = rows.slice().reverse();
+    let streak = 0;
+    for (let i = chronological.length - 1; i >= 0; i--) {
+      if (chronological[i].status === "present") streak++;
+      else break;
+    }
+
+    return {
+      rows: rows,
+      attended: attended,
+      missed: rows.length - attended,
+      total: rows.length,
+      rate: rows.length ? Math.round((attended / rows.length) * 100) : 0,
+      streak: streak,
+    };
+  }
+
+  /* Every member's headline attendance number, best rate first.
+     Powers the "who attends regularly" leaderboard on History. */
+  function attendanceLeaderboard() {
+    const all = listServices();
+
+    return getMembers()
+      .map(function (m) {
+        const h = memberHistory(m.id);
+        return {
+          member: m,
+          attended: h.attended,
+          missed: h.missed,
+          total: h.total,
+          rate: h.total ? Math.round((h.attended / h.total) * 100) : 0,
+          streak: h.streak,
+          last: h.rows.length ? h.rows[0].date : "",
+        };
+      })
+      .sort(function (a, b) {
+        if (b.rate !== a.rate) return b.rate - a.rate;
+        if (b.attended !== a.attended) return b.attended - a.attended;
+        return a.member.last.localeCompare(b.member.last);
+      });
+  }
+
   /* ---------- session (demo auth) ---------- */
   function getUser() {
     return read(K.session, null);
@@ -469,6 +579,10 @@ window.ChurchStore = (function () {
     countServices: countServices,
     statsFor: statsFor,
     overallStats: overallStats,
+    serviceDetail: serviceDetail,
+    serviceHistory: serviceHistory,
+    memberHistory: memberHistory,
+    attendanceLeaderboard: attendanceLeaderboard,
     typeLabel: typeLabel,
     typeShort: typeShort,
     getUser: getUser,
