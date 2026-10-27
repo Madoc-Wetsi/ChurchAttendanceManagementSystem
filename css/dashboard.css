@@ -59,6 +59,13 @@
   color: var(--text-muted);
 }
 
+/* One block per service type (Sunday / Midweek) */
+.rate-block + .rate-block {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid #f6e7e7;
+}
+
 .svc-row {
   display: flex;
   align-items: center;

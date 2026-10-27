@@ -7,7 +7,13 @@
   const err = document.getElementById("member-err");
   const photoInput = document.getElementById("photo");
   const preview = document.getElementById("photo-preview");
+  const ministrySel = document.getElementById("ministry");
   let photoData = "";
+
+  // Populate the ministry list from the shared store
+  ministrySel.innerHTML = S.MINISTRIES.map(function (m) {
+    return '<option value="' + S.esc(m) + '">' + S.esc(m) + "</option>";
+  }).join("");
 
   const MAX_PHOTO = 2 * 1024 * 1024; // 2 MB
 
@@ -68,10 +74,18 @@
     const last = form.last.value.trim();
     const email = form.email.value.trim();
     const phone = form.phone.value.trim();
+    const ministry = form.ministry.value;
+    const dob = form.dob.value;
 
     if (!first) return showErr("First name is required.");
     if (!last) return showErr("Last name is required.");
     if (email && !isEmail(email)) return showErr("That email address doesn't look right.");
+
+    if (dob) {
+      const d = new Date(dob);
+      if (isNaN(d.getTime())) return showErr("That date of birth isn't valid.");
+      if (d > new Date()) return showErr("Date of birth can't be in the future.");
+    }
 
     const dupe = S.getMembers().some(function (m) {
       return email && (m.email || "").toLowerCase() === email.toLowerCase();
@@ -85,6 +99,8 @@
       last: last,
       email: email,
       phone: phone,
+      ministry: ministry,
+      dob: dob,
       photo: photoData,
     });
 

@@ -26,11 +26,17 @@
     <header>
       <div class="page-title">Take Attendance</div>
       <div class="header-actions">
-        <a class="btn btn-white" href="members.html">+ Add Member</a>
+        <a class="btn btn-white" href="members.html">Members</a>
       </div>
     </header>
 
     <div class="content">
+      <!-- Which service are we recording? -->
+      <div class="svc-switch" id="svc-switch">
+        <button type="button" data-type="sunday" class="on">Sunday Service</button>
+        <button type="button" data-type="midweek">Midweek Service</button>
+      </div>
+
       <div class="toolbar">
         <div class="field" style="min-width:210px">
           <label for="att-date">Service date</label>
@@ -38,7 +44,7 @@
         </div>
         <div class="field grow">
           <label for="att-search">Search member</label>
-          <input type="text" id="att-search" placeholder="Name, email or phone…">
+          <input type="text" id="att-search" placeholder="Name, email, phone or ministry…">
         </div>
         <div class="field" style="align-self:flex-end">
           <label>&nbsp;</label>
@@ -50,6 +56,10 @@
       </div>
 
       <div class="att-summary">
+        <div class="summary-head">
+          <span class="svc-tag" id="svc-tag">Sunday Service</span>
+          <span class="svc-date" id="svc-date">—</span>
+        </div>
         <div class="counts">
           <span><b id="c-present">0</b>Present</span>
           <span class="absent"><b id="c-absent">0</b>Absent</span>

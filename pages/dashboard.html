@@ -48,33 +48,29 @@
           <div class="sub">On the church register</div>
         </div>
         <div class="card hoverable">
-          <div class="label">Present Today</div>
-          <div class="value" id="stat-present">0</div>
-          <div class="sub" id="stat-present-sub">No service taken yet</div>
+          <div class="label">Sunday Services</div>
+          <div class="value" id="stat-sunday">0</div>
+          <div class="sub">Recorded all-time</div>
         </div>
         <div class="card hoverable">
-          <div class="label">Absent Today</div>
-          <div class="value" id="stat-absent">0</div>
-          <div class="sub">Marked absent today</div>
+          <div class="label">Midweek Services</div>
+          <div class="value" id="stat-midweek">0</div>
+          <div class="sub">Recorded all-time</div>
         </div>
         <div class="card hoverable">
-          <div class="label">Services Recorded</div>
+          <div class="label">Total Services</div>
           <div class="value" id="stat-services">0</div>
-          <div class="sub">All-time attendance records</div>
+          <div class="sub">Sunday + Midweek</div>
         </div>
       </section>
 
       <section class="two-col">
         <div class="card">
           <div class="card-title">Today's Attendance</div>
-          <div class="rate-head">
-            <div class="label" style="margin:0">Turnout</div>
-            <div class="pct" id="rate-pct">0%</div>
-          </div>
-          <div class="progress"><span id="rate-bar"></span></div>
-          <div class="rate-note" id="rate-note">Attendance has not been taken for today yet.</div>
+          <div id="today-rates"></div>
           <div class="quick-links" style="margin-top:18px">
-            <a class="btn btn-primary" href="attendance.html">Take Attendance</a>
+            <a class="btn btn-primary" href="attendance.html?type=sunday">Take Sunday</a>
+            <a class="btn btn-white" href="attendance.html?type=midweek">Take Midweek</a>
             <a class="btn btn-ghost" href="export.html">Export Record</a>
           </div>
         </div>

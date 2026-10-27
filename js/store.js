@@ -15,6 +15,27 @@ window.ChurchStore = (function () {
     session: "flc_session",
   };
 
+  /* A church runs two kinds of service, and both need their own
+     attendance sheet. Every record is stored per date AND per type. */
+  const SERVICE_TYPES = {
+    sunday: { id: "sunday", label: "Sunday Service", short: "Sunday" },
+    midweek: { id: "midweek", label: "Midweek Service", short: "Midweek" },
+  };
+
+  const MINISTRIES = [
+    "Choir",
+    "Ushering",
+    "Sunday School",
+    "Youth",
+    "Media / Technical",
+    "Protocol",
+    "Prayer Warriors",
+    "Finance",
+    "Children's Ministry",
+    "Evangelism",
+    "None",
+  ];
+
   /* ---------- storage helpers ---------- */
   function read(key, fallback) {
     try {
@@ -58,6 +79,18 @@ window.ChurchStore = (function () {
     });
   }
 
+  /* Compact date for tables: "25 Oct 2026" */
+  function shortDate(k) {
+    if (!k) return "";
+    const parts = k.split("-").map(Number);
+    const d = new Date(parts[0], parts[1] - 1, parts[2]);
+    return d.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  }
+
   function esc(value) {
     return String(value == null ? "" : value).replace(
       /[&<>"']/g,
@@ -73,8 +106,60 @@ window.ChurchStore = (function () {
     );
   }
 
-  /* No demo data is seeded — the register starts empty and is filled
-     in through the Add Member screen. */
+  /* Most recent Sunday (today, if today is Sunday) — the sensible
+     default when taking Sunday attendance. */
+  function defaultDateFor(type) {
+    const now = new Date();
+    if (type === "sunday") {
+      const d = new Date(now);
+      d.setDate(now.getDate() - now.getDay());
+      return key(d);
+    }
+    return key();
+  }
+
+  /* ---------- one-off migration ----------
+     Records written before service types existed look like
+       { "2026-10-25": { memberId: "present" } }
+     and need wrapping into the Sunday sheet:
+       { "2026-10-25": { sunday: { memberId: "present" } } }       */
+  function migrate() {
+    const att = read(K.attendance, {});
+    let attChanged = false;
+
+    Object.keys(att).forEach(function (date) {
+      const day = att[date] || {};
+      const ids = Object.keys(day);
+      if (!ids.length) return;
+      if (day[ids[0]] === "present" || day[ids[0]] === "absent") {
+        att[date] = { sunday: day };
+        attChanged = true;
+      }
+    });
+
+    if (attChanged) write(K.attendance, att);
+
+    // Members gained ministry + date of birth; backfill empty values.
+    const members = read(K.members, []);
+    let memChanged = false;
+    members.forEach(function (m) {
+      if (m.ministry === undefined) {
+        m.ministry = "";
+        memChanged = true;
+      }
+      if (m.dob === undefined) {
+        m.dob = "";
+        memChanged = true;
+      }
+    });
+    if (memChanged) write(K.members, members);
+  }
+
+  try {
+    migrate();
+  } catch (e) {
+    /* never let migration block the app */
+  }
 
   /* ---------- members ---------- */
   function getMembers() {
@@ -95,12 +180,43 @@ window.ChurchStore = (function () {
       last: String(data.last || "").trim(),
       email: String(data.email || "").trim(),
       phone: String(data.phone || "").trim(),
+      ministry: String(data.ministry || "").trim(),
+      dob: String(data.dob || "").trim(),
       photo: data.photo || "",
       joined: key(),
     };
     members.push(member);
     write(K.members, members);
     return member;
+  }
+
+  /* Updates only the fields passed in; everything else is preserved. */
+  function updateMember(id, patch) {
+    const members = getMembers();
+    const idx = members.findIndex(function (m) {
+      return m.id === id;
+    });
+    if (idx === -1) return null;
+
+    const current = members[idx];
+    const next = {
+      id: current.id,
+      joined: current.joined,
+      photo: current.photo,
+      first: String(patch.first !== undefined ? patch.first : current.first).trim(),
+      last: String(patch.last !== undefined ? patch.last : current.last).trim(),
+      email: String(patch.email !== undefined ? patch.email : current.email).trim(),
+      phone: String(patch.phone !== undefined ? patch.phone : current.phone).trim(),
+      ministry: String(
+        patch.ministry !== undefined ? patch.ministry : current.ministry || ""
+      ).trim(),
+      dob: String(patch.dob !== undefined ? patch.dob : current.dob || "").trim(),
+    };
+    if (patch.photo !== undefined) next.photo = patch.photo;
+
+    members[idx] = next;
+    write(K.members, members);
+    return next;
   }
 
   function deleteMember(id) {
@@ -112,7 +228,10 @@ window.ChurchStore = (function () {
     // scrub the member out of every service record
     const att = getAttendance();
     Object.keys(att).forEach(function (date) {
-      if (att[date][id]) delete att[date][id];
+      Object.keys(att[date]).forEach(function (type) {
+        if (att[date][type][id]) delete att[date][type][id];
+        if (!Object.keys(att[date][type]).length) delete att[date][type];
+      });
       if (!Object.keys(att[date]).length) delete att[date];
     });
     write(K.attendance, att);
@@ -127,60 +246,95 @@ window.ChurchStore = (function () {
       return (
         (m.first + " " + m.last).toLowerCase().indexOf(q) > -1 ||
         (m.email || "").toLowerCase().indexOf(q) > -1 ||
-        (m.phone || "").toLowerCase().indexOf(q) > -1
+        (m.phone || "").toLowerCase().indexOf(q) > -1 ||
+        (m.ministry || "").toLowerCase().indexOf(q) > -1
       );
     });
   }
 
-  /* ---------- attendance ---------- */
+  /* ---------- attendance ----------
+     Shape: att[date][type][memberId] = "present" | "absent"       */
   function getAttendance() {
     return read(K.attendance, {});
   }
 
-  function getRecord(date) {
-    return getAttendance()[date] || {};
+  function getRecord(date, type) {
+    type = type || "sunday";
+    const day = getAttendance()[date];
+    return (day && day[type]) || {};
   }
 
-  function setStatus(date, memberId, status) {
+  function setStatus(date, type, memberId, status) {
+    type = type || "sunday";
     const att = getAttendance();
     if (!att[date]) att[date] = {};
+    if (!att[date][type]) att[date][type] = {};
+
     if (status) {
-      att[date][memberId] = status;
+      att[date][type][memberId] = status;
     } else {
-      delete att[date][memberId];
+      delete att[date][type][memberId];
+      if (!Object.keys(att[date][type]).length) delete att[date][type];
       if (!Object.keys(att[date]).length) delete att[date];
     }
     write(K.attendance, att);
   }
 
-  function markAll(date, status) {
+  function markAll(date, type, status) {
+    type = type || "sunday";
     const att = getAttendance();
     const rec = {};
     getMembers().forEach(function (m) {
       rec[m.id] = status;
     });
-    att[date] = rec;
+    if (!att[date]) att[date] = {};
+    att[date][type] = rec;
     write(K.attendance, att);
   }
 
-  function clearRecord(date) {
+  function clearRecord(date, type) {
+    type = type || "sunday";
     const att = getAttendance();
-    delete att[date];
+    if (att[date]) {
+      delete att[date][type];
+      if (!Object.keys(att[date]).length) delete att[date];
+    }
     write(K.attendance, att);
   }
 
-  function listServiceDates() {
-    return Object.keys(getAttendance())
-      .filter(function (d) {
-        return Object.keys(getAttendance()[d]).length > 0;
-      })
-      .sort()
-      .reverse();
+  function hasRecord(date, type) {
+    const rec = getRecord(date, type);
+    return Object.keys(rec).length > 0;
   }
 
-  function statsFor(date) {
+  /* Every service ever taken, newest first:
+     [{ date: "2026-10-25", type: "sunday" }, ...] */
+  function listServices() {
+    const att = getAttendance();
+    const out = [];
+    Object.keys(att).forEach(function (date) {
+      Object.keys(att[date]).forEach(function (type) {
+        if (Object.keys(att[date][type]).length) {
+          out.push({ date: date, type: type });
+        }
+      });
+    });
+    out.sort(function (a, b) {
+      if (a.date === b.date) return a.type < b.type ? 1 : -1;
+      return a.date < b.date ? 1 : -1;
+    });
+    return out;
+  }
+
+  function countServices(type) {
+    return listServices().filter(function (s) {
+      return !type || s.type === type;
+    }).length;
+  }
+
+  function statsFor(date, type) {
     const members = getMembers();
-    const rec = getRecord(date);
+    const rec = getRecord(date, type);
     let present = 0;
     let absent = 0;
     members.forEach(function (m) {
@@ -198,16 +352,31 @@ window.ChurchStore = (function () {
 
   function overallStats() {
     const today = key();
-    const s = statsFor(today);
+    const services = listServices();
     return {
       totalMembers: getMembers().length,
-      services: listServiceDates().length,
-      presentToday: s.present,
-      absentToday: s.absent,
-      unmarkedToday: s.unmarked,
+      services: services.length,
+      sundayServices: services.filter(function (s) {
+        return s.type === "sunday";
+      }).length,
+      midweekServices: services.filter(function (s) {
+        return s.type === "midweek";
+      }).length,
       todayKey: today,
       todayLabel: prettyDate(today),
+      today: {
+        sunday: statsFor(today, "sunday"),
+        midweek: statsFor(today, "midweek"),
+      },
     };
+  }
+
+  function typeLabel(type) {
+    return (SERVICE_TYPES[type] || SERVICE_TYPES.sunday).label;
+  }
+
+  function typeShort(type) {
+    return (SERVICE_TYPES[type] || SERVICE_TYPES.sunday).short;
   }
 
   /* ---------- session (demo auth) ---------- */
@@ -230,12 +399,25 @@ window.ChurchStore = (function () {
   }
 
   /* ---------- export ---------- */
-  function toCSV(date) {
-    const rows = [["Date", "First Name", "Last Name", "Email", "Phone", "Status"]];
-    const rec = getRecord(date);
+  function toCSV(date, type) {
+    type = type || "sunday";
+    const rows = [
+      ["Date", "Service", "First Name", "Last Name", "Email", "Phone", "Ministry", "Date of Birth", "Status"],
+    ];
+    const rec = getRecord(date, type);
     getMembers().forEach(function (m) {
       const status = rec[m.id] || "unmarked";
-      rows.push([date, m.first, m.last, m.email, m.phone, status]);
+      rows.push([
+        date,
+        typeLabel(type),
+        m.first,
+        m.last,
+        m.email,
+        m.phone,
+        m.ministry || "",
+        m.dob || "",
+        status,
+      ]);
     });
     return rows
       .map(function (r) {
@@ -264,12 +446,17 @@ window.ChurchStore = (function () {
   }
 
   return {
+    SERVICE_TYPES: SERVICE_TYPES,
+    MINISTRIES: MINISTRIES,
     key: key,
     prettyDate: prettyDate,
+    shortDate: shortDate,
     esc: esc,
+    defaultDateFor: defaultDateFor,
     getMembers: getMembers,
     getMember: getMember,
     addMember: addMember,
+    updateMember: updateMember,
     deleteMember: deleteMember,
     searchMembers: searchMembers,
     getAttendance: getAttendance,
@@ -277,9 +464,13 @@ window.ChurchStore = (function () {
     setStatus: setStatus,
     markAll: markAll,
     clearRecord: clearRecord,
-    listServiceDates: listServiceDates,
+    hasRecord: hasRecord,
+    listServices: listServices,
+    countServices: countServices,
     statsFor: statsFor,
     overallStats: overallStats,
+    typeLabel: typeLabel,
+    typeShort: typeShort,
     getUser: getUser,
     login: login,
     logout: logout,

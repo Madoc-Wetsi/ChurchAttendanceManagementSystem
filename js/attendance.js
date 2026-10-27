@@ -1,16 +1,18 @@
-/* Take Attendance — the core screen */
+/* Take Attendance — the core screen.
+   Handles two service types: Sunday and Midweek. */
 (function () {
   const S = window.ChurchStore;
   const $ = (id) => document.getElementById(id);
 
-  let date = S.key();
+  let type = "sunday";
+  let date = S.defaultDateFor(type);
   let term = "";
   let record = {};
 
   $("att-date").value = date;
 
   function loadRecord() {
-    record = S.getRecord(date);
+    record = S.getRecord(date, type);
   }
 
   function initials(m) {
@@ -27,6 +29,21 @@
     if (status === "present") return '<span class="badge badge-present">Present</span>';
     if (status === "absent") return '<span class="badge badge-absent">Absent</span>';
     return '<span class="badge badge-unmarked">Unmarked</span>';
+  }
+
+  function renderHead() {
+    $("svc-tag").textContent = S.typeLabel(type);
+    $("svc-date").textContent = S.prettyDate(date);
+
+    Array.prototype.forEach.call(
+      $("svc-switch").querySelectorAll("button[data-type]"),
+      function (b) {
+        b.classList.toggle("on", b.getAttribute("data-type") === type);
+      }
+    );
+
+    // Title reflects which sheet you're on
+    document.title = S.typeShort(type) + " Attendance — First Love Church";
   }
 
   function renderCounts() {
@@ -77,7 +94,7 @@
           S.esc(m.first + " " + m.last) +
           "</div>" +
           '<div class="att-meta">' +
-          S.esc(m.email || m.phone || "No contact on file") +
+          S.esc(m.ministry || m.email || m.phone || "No details on file") +
           "</div>" +
           "</div></div>" +
           '<div class="seg">' +
@@ -99,16 +116,35 @@
     renderCounts();
   }
 
+  function render() {
+    renderHead();
+    renderList();
+  }
+
   function setStatus(id, status) {
     const next = record[id] === status ? null : status; // click again to unmark
     if (next) record[id] = next;
     else delete record[id];
 
-    S.setStatus(date, id, next);
+    S.setStatus(date, type, id, next);
     renderList();
   }
 
-  /* ---- events ---- */
+  /* ---- service switch ---- */
+  $("svc-switch").addEventListener("click", function (e) {
+    const btn = e.target.closest("button[data-type]");
+    if (!btn) return;
+    const next = btn.getAttribute("data-type");
+    if (next === type) return;
+
+    type = next;
+    date = S.defaultDateFor(type);
+    $("att-date").value = date;
+    loadRecord();
+    render();
+  });
+
+  /* ---- attendance list ---- */
   $("att-list").addEventListener("click", function (e) {
     const btn = e.target.closest("button[data-status]");
     if (!btn) return;
@@ -126,34 +162,46 @@
     if (!e.target.value) return;
     date = e.target.value;
     loadRecord();
-    renderList();
+    render();
   });
 
   $("btn-all-present").addEventListener("click", function () {
-    S.markAll(date, "present");
+    if (!S.getMembers().length) {
+      toast("Add members first");
+      return;
+    }
+    S.markAll(date, type, "present");
     loadRecord();
     renderList();
-    toast("Everyone marked present", true);
+    toast("Everyone marked present for " + S.typeShort(type), true);
   });
 
   $("btn-clear").addEventListener("click", function () {
     if (!Object.keys(record).length) return;
-    if (!confirm("Clear all marks for " + S.prettyDate(date) + "?")) return;
-    S.clearRecord(date);
+    if (!confirm("Clear all marks for " + S.typeLabel(type) + " on " + S.prettyDate(date) + "?"))
+      return;
+    S.clearRecord(date, type);
     loadRecord();
     renderList();
     toast("Attendance cleared");
   });
 
   $("btn-save").addEventListener("click", function () {
-    // Every toggle already persists — this just confirms and reports.
-    const r = S.statsFor(date);
-    if (!Object.keys(S.getRecord(date)).length) {
+    // Every toggle already persists — this confirms and reports.
+    if (!Object.keys(S.getRecord(date, type)).length) {
       toast("Nothing marked yet");
       return;
     }
+    const r = S.statsFor(date, type);
     toast(
-      "Saved · " + r.present + " present, " + r.absent + " absent, " + r.unmarked + " unmarked",
+      S.typeShort(type) +
+        " saved · " +
+        r.present +
+        " present, " +
+        r.absent +
+        " absent, " +
+        r.unmarked +
+        " unmarked",
       true
     );
   });
@@ -174,6 +222,15 @@
     }, 2600);
   }
 
+  // Allow deep-linking a specific sheet: attendance.html?type=midweek
+  const params = new URLSearchParams(window.location.search);
+  const wanted = params.get("type");
+  if (wanted && S.SERVICE_TYPES[wanted]) {
+    type = wanted;
+    date = S.defaultDateFor(type);
+    $("att-date").value = date;
+  }
+
   loadRecord();
-  renderList();
+  render();
 })();

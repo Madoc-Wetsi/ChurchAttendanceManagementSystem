@@ -35,7 +35,15 @@
         <div class="card export-panel">
           <div class="card-title">Export a record</div>
           <div class="field">
-            <label for="exp-date">Service date</label>
+            <label for="exp-type">Service type</label>
+            <select id="exp-type">
+              <option value="">All services</option>
+              <option value="sunday">Sunday Service</option>
+              <option value="midweek">Midweek Service</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="exp-date">Service</label>
             <select id="exp-date"></select>
           </div>
           <button class="btn btn-primary" id="btn-csv" type="button">Download CSV</button>
@@ -56,6 +64,7 @@
               <thead>
                 <tr>
                   <th>Member</th>
+                  <th>Ministry</th>
                   <th>Email</th>
                   <th>Phone</th>
                   <th>Status</th>

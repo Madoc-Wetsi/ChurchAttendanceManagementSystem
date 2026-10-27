@@ -33,6 +33,9 @@
 
     body.innerHTML = members
       .map(function (m) {
+        const dob = m.dob ? S.shortDate(m.dob) : "";
+        const contact = [m.email, m.phone].filter(Boolean);
+
         return (
           '<tr data-id="' +
           S.esc(m.id) +
@@ -46,17 +49,31 @@
           S.esc(m.first + " " + m.last) +
           "</div>" +
           '<div class="joined">Joined ' +
-          S.esc(S.prettyDate(m.joined).split(",").slice(1).join(",").trim() || "—") +
+          S.esc(S.shortDate(m.joined) || "—") +
           "</div>" +
           "</div></div></td>" +
-          '<td class="muted-cell">' +
-          S.esc(m.email || "—") +
+          "<td>" +
+          (m.ministry && m.ministry !== "None"
+            ? '<span class="badge badge-ministry">' + S.esc(m.ministry) + "</span>"
+            : '<span class="muted-cell">—</span>') +
           "</td>" +
           '<td class="muted-cell">' +
-          S.esc(m.phone || "—") +
+          (dob
+            ? S.esc(dob)
+            : "—") +
+          "</td>" +
+          '<td class="muted-cell">' +
+          (contact.length
+            ? contact.map(function (c) {
+                return "<div>" + S.esc(c) + "</div>";
+              }).join("")
+            : "—") +
           "</td>" +
           '<td><div class="row-actions">' +
           '<a class="btn btn-ghost btn-sm" href="attendance.html">Attendance</a>' +
+          '<a class="btn btn-white btn-sm" href="../auth/edit-member.html?id=' +
+          S.esc(m.id) +
+          '">Edit</a>' +
           '<button class="btn btn-danger btn-sm" type="button" data-del="' +
           S.esc(m.id) +
           '">Delete</button>' +
@@ -71,13 +88,21 @@
     render();
   });
 
-  // "?added=Jane Doe" arrives from the add-member redirect
+  // "?added=Jane Doe" / "?updated=Jane Doe" arrive from the member forms
   (function () {
-    const added = new URLSearchParams(window.location.search).get("added");
-    if (!added) return;
+    const params = new URLSearchParams(window.location.search);
+    const added = params.get("added");
+    const updated = params.get("updated");
+    const msg = added
+      ? added + " added to the register"
+      : updated
+      ? "Changes saved for " + updated
+      : "";
+    if (!msg) return;
+
     const el = document.createElement("div");
     el.className = "toast show ok";
-    el.textContent = added + " added to the register";
+    el.textContent = msg;
     document.body.appendChild(el);
     setTimeout(function () {
       el.classList.remove("show");

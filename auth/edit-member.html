@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Member — First Love Church</title>
+  <link rel="stylesheet" href="../css/shared.css">
+  <link rel="stylesheet" href="../css/auth.css">
+</head>
+<body style="display:block">
+  <div class="auth-wrap">
+    <div class="auth-brand">
+      <span class="mark">F</span>
+      <h1>Edit member</h1>
+      <p>Update this member's details. Their attendance history stays exactly as it is.</p>
+      <div class="tag">First Love Church · Member Register</div>
+    </div>
+
+    <div class="auth-side">
+      <div class="auth-card" id="edit-card" hidden>
+        <h2 id="edit-title">Edit details</h2>
+        <p class="sub" id="edit-sub">Change what needs updating, then save.</p>
+
+        <form class="auth-form" id="member-form" novalidate>
+          <div class="two">
+            <div class="field">
+              <label for="first">First name</label>
+              <input type="text" id="first" name="first" autocomplete="given-name">
+            </div>
+            <div class="field">
+              <label for="last">Last name</label>
+              <input type="text" id="last" name="last" autocomplete="family-name">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" autocomplete="email">
+          </div>
+
+          <div class="field">
+            <label for="phone">Phone</label>
+            <input type="text" id="phone" name="phone" autocomplete="tel">
+          </div>
+
+          <div class="two">
+            <div class="field">
+              <label for="ministry">Ministry</label>
+              <select id="ministry" name="ministry"></select>
+            </div>
+            <div class="field">
+              <label for="dob">Date of birth</label>
+              <input type="date" id="dob" name="dob">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Photo</label>
+            <div class="file-row">
+              <span class="avatar" id="photo-preview">+</span>
+              <label for="photo">Replace the photo. JPG or PNG, under 2 MB.</label>
+            </div>
+            <input type="file" id="photo" name="photo" accept="image/*">
+            <button class="btn btn-ghost btn-sm" type="button" id="btn-clear-photo" style="align-self:flex-start;margin-top:6px">Remove photo</button>
+          </div>
+
+          <div class="err" id="member-err" role="alert"></div>
+
+          <button class="btn btn-primary" type="submit">Save changes</button>
+          <a class="btn btn-ghost" id="btn-cancel" href="../pages/members.html" style="width:100%">Cancel</a>
+        </form>
+      </div>
+
+      <!-- Shown when the id is missing or unknown -->
+      <div class="auth-card" id="missing-card" hidden>
+        <h2>Member not found</h2>
+        <p class="sub">That member doesn't exist any more — they may have been deleted.</p>
+        <a class="btn btn-primary" href="../pages/members.html" style="width:100%">Back to members</a>
+      </div>
+
+      <div class="auth-card" id="loading-card">
+        <h2>Loading…</h2>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/store.js"></script>
+  <script src="../js/edit-member.js"></script>
+</body>
+</html>

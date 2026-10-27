@@ -422,6 +422,21 @@ tbody tr:hover {
   color: var(--text-muted);
 }
 
+.badge-ministry {
+  background: var(--red-100);
+  color: var(--red-700);
+  white-space: nowrap;
+}
+
+.badge-svc {
+  background: var(--red-100);
+  color: var(--red-700);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
 /* ---------------- Segmented control ---------------- */
 .seg {
   display: inline-flex;

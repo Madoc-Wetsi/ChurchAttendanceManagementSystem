@@ -1,65 +1,96 @@
-/* Dashboard — stats, turnout meter and recent services */
+/* Dashboard — stats, turnout and recent services (Sunday + Midweek) */
 (function () {
   const S = window.ChurchStore;
   const $ = (id) => document.getElementById(id);
+
+  function rateMarkup(stats, label) {
+    if (!stats.total) {
+      return (
+        '<div class="rate-block"><div class="rate-head">' +
+        '<div class="label" style="margin:0">' +
+        label +
+        '</div><div class="pct">—</div></div>' +
+        '<div class="progress"><span style="width:0%"></span></div>' +
+        '<div class="rate-note">Add members to see turnout.</div></div>'
+      );
+    }
+    if (!stats.present && !stats.absent) {
+      return (
+        '<div class="rate-block"><div class="rate-head">' +
+        '<div class="label" style="margin:0">' +
+        label +
+        '</div><div class="pct">—</div></div>' +
+        '<div class="progress"><span style="width:0%"></span></div>' +
+        '<div class="rate-note">' +
+        label +
+        " not taken for today yet.</div></div>"
+      );
+    }
+    return (
+      '<div class="rate-block"><div class="rate-head">' +
+      '<div class="label" style="margin:0">' +
+      label +
+      '</div><div class="pct">' +
+      stats.rate +
+      "%</div></div>" +
+      '<div class="progress"><span style="width:' +
+      stats.rate +
+      '%"></span></div>' +
+      '<div class="rate-note">' +
+      stats.present +
+      " of " +
+      stats.total +
+      " present · " +
+      stats.absent +
+      " absent · " +
+      stats.unmarked +
+      " unmarked</div></div>"
+    );
+  }
 
   function render() {
     const stats = S.overallStats();
 
     const user = S.getUser();
     $("side-user").textContent = user ? user.name : "Church Admin";
-    $("welcome-name").textContent = user ? "Welcome back, " + user.name.split(" ")[0] : "Welcome back";
+    $("welcome-name").textContent = user
+      ? "Welcome back, " + user.name.split(" ")[0]
+      : "Welcome back";
     $("welcome-date").textContent = stats.todayLabel;
 
     $("stat-total").textContent = stats.totalMembers;
-    $("stat-present").textContent = stats.presentToday;
-    $("stat-absent").textContent = stats.absentToday;
+    $("stat-sunday").textContent = stats.sundayServices;
+    $("stat-midweek").textContent = stats.midweekServices;
     $("stat-services").textContent = stats.services;
 
-    // Turnout for today only
-    const hasToday = S.getRecord(stats.todayKey);
-    const taken = Object.keys(hasToday).length > 0;
+    // Today's turnout, split by service type
+    $("today-rates").innerHTML =
+      rateMarkup(stats.today.sunday, "Sunday Service") +
+      rateMarkup(stats.today.midweek, "Midweek Service");
 
-    if (taken) {
-      const rate = stats.totalMembers
-        ? Math.round((stats.presentToday / stats.totalMembers) * 100)
-        : 0;
-      $("rate-pct").textContent = rate + "%";
-      $("rate-bar").style.width = rate + "%";
-      $("rate-note").textContent =
-        stats.presentToday +
-        " of " +
-        stats.totalMembers +
-        " members present. " +
-        stats.unmarkedToday +
-        " not yet marked.";
-      $("stat-present-sub").textContent = stats.presentToday + " of " + stats.totalMembers + " members";
-    } else {
-      $("rate-pct").textContent = "—";
-      $("rate-bar").style.width = "0%";
-      $("rate-note").textContent = "Attendance has not been taken for today yet.";
-      $("stat-present-sub").textContent = "No service taken yet";
-    }
-
-    // Recent services (most recent first)
-    const dates = S.listServiceDates().slice(0, 6);
+    // Recent services (both types, most recent first)
+    const services = S.listServices().slice(0, 8);
     const list = $("recent-list");
 
-    if (!dates.length) {
+    if (!services.length) {
       list.innerHTML =
         '<div class="empty"><strong>No services recorded yet</strong>Take attendance and your history will appear here.</div>';
       return;
     }
 
-    list.innerHTML = dates
-      .map(function (date) {
-        const r = S.statsFor(date);
-        const label = S.prettyDate(date);
+    list.innerHTML = services
+      .map(function (svc) {
+        const r = S.statsFor(svc.date, svc.type);
+        const label = S.prettyDate(svc.date);
+        const parts = label.split(",");
         return (
           '<div class="svc-row"><div class="when">' +
-          S.esc(label.split(",")[0]) +
+          '<span class="badge badge-svc">' +
+          S.esc(S.typeShort(svc.type)) +
+          "</span> " +
+          S.esc(parts[0]) +
           "<small>" +
-          S.esc(label.split(",").slice(1).join(",").trim()) +
+          S.esc(parts.slice(1).join(",").trim()) +
           "</small></div>" +
           '<div class="badge ' +
           (r.rate >= 70 ? "badge-present" : "badge-unmarked") +
