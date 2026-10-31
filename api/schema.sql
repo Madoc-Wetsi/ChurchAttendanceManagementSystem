@@ -76,8 +76,9 @@ CREATE TABLE IF NOT EXISTS attendance (
 ) ENGINE=InnoDB;
 
 -- ------------------------------------------------------------
---  users — server-side sign-in accounts. Passwords must be stored
---  as password_hash() output, never as plain text.
+--  users — ready for real login. The app ships with demo auth
+--  kept in the browser; wire api/auth.php to this table when
+--  you want proper password sign-in.
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS users (
   id            INT          NOT NULL AUTO_INCREMENT,

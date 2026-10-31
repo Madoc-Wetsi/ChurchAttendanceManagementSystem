@@ -96,11 +96,6 @@
   gap: 16px;
 }
 
-.auth-form[hidden],
-.auth-alt[hidden] {
-  display: none;
-}
-
 .auth-form .two {
   display: grid;
   grid-template-columns: 1fr 1fr;

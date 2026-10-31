@@ -2,8 +2,8 @@
 /* ============================================================
    Firstlove Church — API
    ------------------------------------------------------------
-   The front end (js/backend.js) uses this authenticated API for
-   the database and for private member-photo delivery:
+   Two endpoints, both JSON. This is the entire contract the
+   front end (js/backend.js) expects:
 
      GET  index.php?action=bootstrap
           -> { ok: true, data: { members: [...],
@@ -26,41 +26,17 @@
 
 require __DIR__ . '/config.php';
 
-$user = require_authenticated_user();
+check_secret();
 
 $action = isset($_GET['action']) ? $_GET['action'] : '';
-
-if ($action === 'photo') {
-    $name = isset($_GET['name']) ? $_GET['name'] : '';
-    if (!is_string($name)
-        || !preg_match('/^[A-Za-z0-9_-]+\.(jpg|png|gif|webp)$/i', $name)) {
-        json_fail('Photo not found.', 404);
-    }
-
-    $path = UPLOAD_DIR . '/' . $name;
-    $image = is_file($path) ? getimagesize($path) : false;
-    $allowedTypes = array('image/jpeg', 'image/png', 'image/gif', 'image/webp');
-    if (!$image || !in_array($image['mime'], $allowedTypes, true)) {
-        json_fail('Photo not found.', 404);
-    }
-
-    header('Content-Type: ' . $image['mime']);
-    header('Content-Length: ' . filesize($path));
-    header('Cache-Control: private, no-store');
-    header('X-Content-Type-Options: nosniff');
-    readfile($path);
-    exit;
-}
 
 /* ---------------------------------------------------------
    Bootstrap — hand the whole database over in one go.
    --------------------------------------------------------- */
 if ($action === 'bootstrap') {
     json_out(array(
-        'ok'        => true,
-        'user'      => $user,
-        'csrfToken' => ensure_csrf_token(),
-        'data'      => array(
+        'ok'   => true,
+        'data' => array(
             'members'    => loadMembers(),
             'attendance' => loadAttendance(),
             'bacentas'   => loadBacentas(),
@@ -75,31 +51,28 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_fail('Use ?action=bootstrap to read, or POST to save.', 405);
 }
 
-require_csrf_token();
-
 $body = request_body();
 
 $collection = isset($body['collection']) ? $body['collection'] : '';
-if (!is_string($collection)
-    || !array_key_exists($collection, array('members' => 1, 'attendance' => 1, 'bacentas' => 1))) {
-    json_fail('Unknown collection.');
+if (!array_key_exists($collection, array('members' => 1, 'attendance' => 1, 'bacentas' => 1))) {
+    json_fail('Unknown collection: ' . $collection);
 }
 
 $data = isset($body['data']) ? $body['data'] : null;
-if (!is_array($data)) {
-    json_fail('Expected "data" to be an array for collection ' . $collection . '.');
+if ($data === null) {
+    json_fail('Missing "data" for collection ' . $collection . '.');
 }
 
 try {
     switch ($collection) {
         case 'members':
-            saveMembers($data);
+            saveMembers(is_array($data) ? $data : array());
             break;
         case 'attendance':
-            saveAttendance($data);
+            saveAttendance(is_array($data) ? $data : array());
             break;
         case 'bacentas':
-            saveBacentas($data);
+            saveBacentas(is_array($data) ? $data : array());
             break;
     }
 } catch (PDOException $e) {
@@ -467,11 +440,11 @@ function photoToUrl($photo) {
         return $photo;
     }
 
-    // Serve uploaded photos through the authenticated API.
+    // Build "/<folder>/api/uploads/photos/<file>" from this script.
     $script = isset($_SERVER['SCRIPT_NAME']) ? $_SERVER['SCRIPT_NAME'] : '/api/index.php';
     $base   = rtrim(str_replace('\\', '/', dirname($script)), '/');   // e.g. /ChurchAttendanceManagementSystem/api
     $base   = preg_replace('#/api$#', '', $base);                    // drop the /api part
     $file   = preg_replace('#^.*?uploads/photos/#', '', $photo);      // keep just the file name
 
-    return $base . '/api/index.php?action=photo&name=' . rawurlencode($file);
+    return $base . '/' . UPLOAD_URL . '/' . $file;
 }

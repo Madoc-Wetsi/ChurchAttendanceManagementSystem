@@ -72,9 +72,8 @@ window.ChurchBackend = (function () {
   }
 
   let base = resolveBase(cfg.apiBase);
-  let enabled = !!base;
+  let enabled = !!base; // may switch itself off if the API is missing
   let state = enabled ? "loading" : "ready";
-  let csrfToken = "";
 
   const waiters = []; // callbacks parked until data is ready
   const pending = {}; // collection -> latest value waiting to go up
@@ -82,74 +81,6 @@ window.ChurchBackend = (function () {
 
   function endpoint() {
     return base + "/index.php";
-  }
-
-  function authEndpoint(action) {
-    return base + "/auth.php?action=" + encodeURIComponent(action);
-  }
-
-  function isProtectedPage() {
-    return /\/pages\/|\/auth\/(add-member|edit-member)\.html$/i.test(
-      location.pathname
-    );
-  }
-
-  function isPublicAuthPage() {
-    return /\/auth\/(login|register)\.html$/i.test(location.pathname);
-  }
-
-  function loginPageUrl() {
-    const match = location.pathname.match(/^(.*)\/(?:pages|auth)\//i);
-    return location.origin + (match ? match[1] : "") + "/auth/login.html";
-  }
-
-  function showError(message) {
-    let banner = document.getElementById("church-api-error");
-    if (!banner) {
-      banner = document.createElement("div");
-      banner.id = "church-api-error";
-      banner.setAttribute("role", "alert");
-      banner.style.cssText =
-        "position:fixed;z-index:9999;top:0;left:0;right:0;padding:14px;" +
-        "background:#8b1e1e;color:#fff;text-align:center;font:14px sans-serif";
-      document.body.insertBefore(banner, document.body.firstChild);
-    }
-    banner.textContent = message;
-  }
-
-  function saveUser(user) {
-    if (user) {
-      localStorage.setItem("flc_session", JSON.stringify(user));
-    } else {
-      localStorage.removeItem("flc_session");
-      Object.keys(COLLECTIONS).forEach(function (name) {
-        localStorage.removeItem(COLLECTIONS[name]);
-      });
-    }
-  }
-
-  function authRequest(action, data) {
-    const headers = { "Content-Type": "application/json" };
-    if (action === "logout" && csrfToken) {
-      headers["X-CSRF-Token"] = csrfToken;
-    }
-    return fetch(authEndpoint(action), {
-      method: "POST",
-      credentials: "same-origin",
-      headers: headers,
-      body: JSON.stringify(data || {}),
-    }).then(function (res) {
-      return res.json().catch(function () {
-        throw new Error("The server returned an invalid response.");
-      }).then(function (json) {
-        if (!res.ok || !json || json.ok !== true) {
-          throw new Error(
-            json && json.error ? json.error : "Authentication request failed."
-          );
-        }
-        return json;
-      });
-    });
   }
 
   function mode() {
@@ -176,37 +107,18 @@ window.ChurchBackend = (function () {
   /* ---- pull everything down once ---- */
   function bootstrap() {
     if (!enabled) return;
-    if (isPublicAuthPage()) {
-      state = "ready";
-      return;
-    }
 
     fetch(endpoint() + "?action=bootstrap", {
       credentials: "same-origin",
     })
       .then(function (res) {
-        return res.json().catch(function () {
-          throw new Error("The server returned an invalid response.");
-        }).then(function (json) {
-          if (!res.ok) {
-            const error = new Error(
-              json && json.error ? json.error : "HTTP " + res.status
-            );
-            error.status = res.status;
-            throw error;
-          }
-          return json;
-        });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
       })
       .then(function (json) {
         if (!json || json.ok !== true || !json.data) {
           throw new Error("Unexpected bootstrap payload");
         }
-        if (!json.user || !json.csrfToken) {
-          throw new Error("The server did not return an authenticated session.");
-        }
-        csrfToken = json.csrfToken;
-        saveUser(json.user);
         Object.keys(COLLECTIONS).forEach(function (name) {
           if (json.data[name] !== undefined) {
             localStorage.setItem(
@@ -219,20 +131,18 @@ window.ChurchBackend = (function () {
         runWaiters();
       })
       .catch(function (err) {
-        if (err.status === 401) {
-          saveUser(null);
-          state = "unauthenticated";
-          if (isProtectedPage()) {
-            location.replace(loginPageUrl());
-          }
-          return;
-        }
-
-        state = "failed";
-        console.error("[ChurchBackend] API bootstrap failed:", err);
-        showError(
-          "Could not load the database. Check that Apache, MySQL, and the API are available, then reload this page."
+        console.warn(
+          "[ChurchBackend] Could not reach " +
+            endpoint() +
+            " — running on this browser's storage instead.\n" +
+            "            Check that the api/ folder is in place and that " +
+            "js/config.js has the right apiBase.\n",
+          err
         );
+        // Carry on in local mode rather than leaving a blank screen.
+        enabled = false;
+        state = "ready";
+        runWaiters();
       });
   }
 
@@ -257,18 +167,11 @@ window.ChurchBackend = (function () {
       fetch(endpoint(), {
         method: "POST",
         credentials: "same-origin",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRF-Token": csrfToken,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       })
         .then(function (res) {
-          if (!res.ok) {
-            const error = new Error("HTTP " + res.status);
-            error.status = res.status;
-            throw error;
-          }
+          if (!res.ok) throw new Error("HTTP " + res.status);
           return res.json();
         })
         .then(function (json) {
@@ -283,15 +186,6 @@ window.ChurchBackend = (function () {
               " — the change is kept in this browser only.",
             err
           );
-          if (err.status === 401 || err.status === 403) {
-            location.replace(loginPageUrl());
-          } else {
-            showError(
-              "Could not save " +
-                key +
-                " to the database. Check your connection and reload before continuing."
-            );
-          }
         });
     });
   }
@@ -312,49 +206,18 @@ window.ChurchBackend = (function () {
     }
   });
 
-  document.addEventListener("click", function (event) {
-    const target = event.target;
-    const link = target && target.closest
-      ? target.closest("[data-sign-out]")
-      : null;
-    if (!link || !enabled) return;
-    event.preventDefault();
-    authRequest("logout", { csrfToken: csrfToken })
-      .then(function () {
-        csrfToken = "";
-        saveUser(null);
-        window.location.href = link.href;
-      })
-      .catch(function (err) {
-        window.alert("Could not sign out: " + err.message);
-      });
-  });
-
   /* Go. */
   bootstrap();
 
   return {
+    // A getter, not a snapshot: if the API turns out to be missing,
+    // `enabled` flips to false and this must follow.
     get enabled() {
       return enabled;
     },
     mode: mode,
     whenReady: whenReady,
     push: push,
-    login: function (email, password) {
-      return authRequest("login", { email: email, password: password }).then(
-        function (result) {
-          csrfToken = result.csrfToken;
-          saveUser(result.user);
-          return result;
-        }
-      );
-    },
-    logout: function () {
-      return authRequest("logout", { csrfToken: csrfToken }).then(function () {
-        csrfToken = "";
-        saveUser(null);
-      });
-    },
     config: cfg,
   };
 })();
