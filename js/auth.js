@@ -1,6 +1,6 @@
 /* Login / Register — demo auth backed by localStorage.
    When PHP is ready, swap the success branches for fetch() calls. */
-(function () {
+ChurchStore.ready(function () {
   const S = window.ChurchStore;
   const loginForm = document.getElementById("login-form");
   const registerForm = document.getElementById("register-form");
@@ -61,4 +61,4 @@
       window.location.href = "../pages/dashboard.html";
     });
   }
-})();
+});

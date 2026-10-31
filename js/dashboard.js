@@ -1,5 +1,5 @@
 /* Dashboard — stats, turnout and recent services (Sunday + Midweek) */
-(function () {
+ChurchStore.ready(function () {
   const S = window.ChurchStore;
   const $ = (id) => document.getElementById(id);
 
@@ -107,4 +107,4 @@
   }
 
   render();
-})();
+});

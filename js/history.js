@@ -1,5 +1,5 @@
 /* History — the attendance log, both by service and by member */
-(function () {
+ChurchStore.ready(function () {
   const S = window.ChurchStore;
   const $ = (id) => document.getElementById(id);
 
@@ -330,4 +330,4 @@
     if (btn) btn.click();
     openMember(id);
   })();
-})();
+});

@@ -1,5 +1,5 @@
 /* Edit member — pre-fill from ?id=, save back to the store */
-(function () {
+ChurchStore.ready(function () {
   const S = window.ChurchStore;
   const form = document.getElementById("member-form");
   if (!form) return;
@@ -224,4 +224,4 @@
     window.location.href =
       "../pages/members.html?updated=" + encodeURIComponent(first + " " + last);
   });
-})();
+});

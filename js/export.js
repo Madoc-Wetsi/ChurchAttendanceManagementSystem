@@ -1,6 +1,6 @@
 /* Export — pick a recorded service (Sunday or Midweek), preview it,
    then download CSV or print. */
-(function () {
+ChurchStore.ready(function () {
   const S = window.ChurchStore;
   const $ = (id) => document.getElementById(id);
 
@@ -140,4 +140,4 @@
     typeFilter.disabled = true;
   }
   if (fillSelect()) renderPreview();
-})();
+});

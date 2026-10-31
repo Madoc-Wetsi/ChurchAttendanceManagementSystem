@@ -1,5 +1,5 @@
 /* Bacentas — create, view, edit and remove fellowship groups */
-(function () {
+ChurchStore.ready(function () {
   const S = window.ChurchStore;
   const $ = (id) => document.getElementById(id);
 
@@ -229,4 +229,4 @@
   /* ---------------- init ---------------- */
   fillLocationSuggestions();
   render();
-})();
+});

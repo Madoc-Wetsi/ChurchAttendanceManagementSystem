@@ -1,6 +1,6 @@
 /* Take Attendance — the core screen.
    Handles two service types: Sunday and Midweek. */
-(function () {
+ChurchStore.ready(function () {
   const S = window.ChurchStore;
   const $ = (id) => document.getElementById(id);
 
@@ -239,4 +239,4 @@
 
   loadRecord();
   render();
-})();
+});

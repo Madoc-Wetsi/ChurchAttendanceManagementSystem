@@ -1,5 +1,5 @@
 /* Add member — validates, saves, shows a live photo preview */
-(function () {
+ChurchStore.ready(function () {
   const S = window.ChurchStore;
   const form = document.getElementById("member-form");
   if (!form) return;
@@ -154,4 +154,4 @@
   });
 
   updatePreview();
-})();
+});

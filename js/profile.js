@@ -10,7 +10,7 @@
 
    It binds itself — no per-page wiring needed.
    =============================================================== */
-window.ProfileView = (function () {
+ChurchStore.ready(function () {
   const S = window.ChurchStore;
 
   function initials(m) {
@@ -158,4 +158,4 @@ window.ProfileView = (function () {
   });
 
   return { open: open, close: close };
-})();
+});

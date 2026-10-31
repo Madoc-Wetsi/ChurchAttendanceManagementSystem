@@ -1,5 +1,5 @@
 /* Members directory */
-(function () {
+ChurchStore.ready(function () {
   const S = window.ChurchStore;
   const $ = (id) => document.getElementById(id);
 
@@ -136,4 +136,4 @@
   });
 
   render();
-})();
+});

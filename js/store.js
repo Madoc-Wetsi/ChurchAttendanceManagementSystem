@@ -51,7 +51,12 @@ window.ChurchStore = (function () {
     "Godokpe 5",
   ];
 
-  /* ---------- storage helpers ---------- */
+  /* ---------- storage helpers ----------
+     localStorage is the working copy the whole UI reads and writes
+     synchronously. When a backend is configured (js/config.js),
+     js/backend.js pulls the real records down before the page
+     renders, and every write below is also pushed back up so the
+     database stays in step.                                             */
   function read(key, fallback) {
     try {
       const raw = localStorage.getItem(key);
@@ -64,6 +69,8 @@ window.ChurchStore = (function () {
   function write(key, value) {
     try {
       localStorage.setItem(key, JSON.stringify(value));
+      // Mirror upstream so the server sees the change too.
+      if (window.ChurchBackend) window.ChurchBackend.push(key, value);
       return true;
     } catch (e) {
       return false;
@@ -219,10 +226,40 @@ window.ChurchStore = (function () {
     if (bacChanged) write(K.bacentas, bacentas);
   }
 
-  try {
-    migrate();
-  } catch (e) {
-    /* never let migration block the app */
+  /* ---------- one-off migration ----------
+     Runs once, and only after any configured backend has finished
+     pulling data down — otherwise it would tidy up an empty cache
+     and then get overwritten by the real records.                */
+  let migrated = false;
+
+  function migrateOnce() {
+    if (migrated) return;
+    migrated = true;
+    try {
+      migrate();
+    } catch (e) {
+      /* never let migration block the app */
+    }
+  }
+
+  /* Pages call this instead of running immediately. With no backend
+     it fires straight away; with one, it waits for the first
+     download so the page opens on real data. */
+  function ready(fn) {
+    if (window.ChurchBackend) {
+      window.ChurchBackend.whenReady(function () {
+        migrateOnce();
+        fn();
+      });
+      return;
+    }
+    migrateOnce();
+    fn();
+  }
+
+  /* Which store the app is running on: "local" or "api". */
+  function mode() {
+    return window.ChurchBackend ? window.ChurchBackend.mode() : "local";
   }
 
   /* ---------- members ---------- */
@@ -799,6 +836,8 @@ window.ChurchStore = (function () {
   return {
     SERVICE_TYPES: SERVICE_TYPES,
     MINISTRIES: MINISTRIES,
+    ready: ready,
+    mode: mode,
     key: key,
     prettyDate: prettyDate,
     shortDate: shortDate,
