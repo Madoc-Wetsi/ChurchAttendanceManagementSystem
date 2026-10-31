@@ -1,30 +1,32 @@
 # Database setup — Firstlove Church, Godokpe Governorship
 
 The app runs two ways. Nothing in the interface changes between
-them — only where the records are kept.
+them — only where the records are kept. It is currently configured
+for API/database mode by default.
 
 | Mode      | Where data lives        | Needs PHP/MySQL |
 | --------- | ----------------------- | --------------- |
 | **Demo**  | This browser only       | No              |
 | **API**   | MySQL, through `api/`   | Yes             |
 
-Demo mode is the default, so the app works the moment you open it.
-Flip one line in `js/config.js` to move to the database.
+To use browser-only demo mode instead, set `apiBase` to `""` in
+`js/config.js`. API mode requires the MySQL setup below.
 
 ---
 
-## 1. Switch the app onto the database
+## 1. API mode setting
 
 `js/config.js`:
 
 ```js
 window.CHURCH_CONFIG = {
-  apiBase: "api",     // was: ""
+  apiBase: "api",
 };
 ```
 
-That is the whole switch. The path is resolved from the project
-root, so it works from `/pages/`, `/auth/` and any install folder.
+The project is already set to this value. The path is resolved from
+the project root, so it works from `/pages/`, `/auth/` and any
+install folder. Set it to `""` to use browser-only demo mode.
 
 ## 2. Create the database
 
@@ -47,30 +49,68 @@ This creates four tables (`members`, `bacentas`, `attendance`,
 user `root`, empty password. Change `DB_NAME`, `DB_USER` and
 `DB_PASS` if yours differ.
 
-## 4. Check it answered
+## 4. Create sign-in accounts
 
-Visit:
+API mode does not allow public registration. An administrator
+creates each account from the project root using the PHP CLI script.
+It reads the password from standard input and stores only a PHP
+`password_hash()` hash in the existing `users` table.
 
+In PowerShell, run:
+
+```powershell
+$secure = Read-Host "New account password" -AsSecureString
+$pointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
+try {
+  [Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer) |
+    & 'C:\xampp\php\php.exe' 'api\create-user.php' 'Jane Doe' 'jane@example.com'
+} finally {
+  [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer)
+}
 ```
-http://localhost/ChurchAttendanceManagementSystem/api/index.php?action=bootstrap
+
+Replace the sample name and email with the account details. Passwords
+must be at least 12 characters. Accounts are assigned the existing
+`admin` role. The script runs only from PHP CLI, not through Apache.
+
+To set or replace the password for an existing account, use:
+
+```powershell
+$secure = Read-Host "New account password" -AsSecureString
+$pointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
+try {
+  [Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer) |
+    & 'C:\xampp\php\php.exe' 'api\set-user-password.php' 'jane@example.com'
+} finally {
+  [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer)
+}
 ```
 
-You should see `{"ok":true,"data":{...}}` with your bacentas in it.
-If you see a database error, it is almost always the credentials.
+Replace the sample email with the existing account's email.
 
-Then open the app and **hard-refresh (Ctrl+F5)**.
+If PHP is not at `C:\xampp\php\php.exe`, replace that path with the
+PHP CLI path on your machine.
+
+## 5. Check the app
+
+Open the app and **hard-refresh (Ctrl+F5)**, then sign in using the
+account created above. An unauthenticated request to
+`api/index.php?action=bootstrap` should return HTTP 401.
 
 ---
 
 ## How the two sides talk
 
 `js/backend.js` sits between the pages and your PHP. On start-up it
-downloads everything once, then pushes each collection back up
-whenever a page saves. If the API is unreachable it says so in the
-browser console and quietly keeps running on the browser's own
-storage — the app never blanks out because the server is down.
+downloads the database after the server verifies the session, then
+pushes each collection back up whenever a page saves. Login is
+handled by `api/auth.php`; the server verifies password hashes and
+issues an HttpOnly session cookie. The data API rejects requests
+without a valid session, and save requests also require a CSRF token.
+If the API is unavailable, the app displays an error instead of
+silently switching to browser storage.
 
-The contract is two endpoints, both JSON:
+The data contract uses two JSON endpoints:
 
 **Read everything**
 
@@ -94,6 +134,22 @@ rows missing from it are deleted. Removing a member in the app
 therefore removes them from MySQL, and their attendance goes with
 them (foreign key `ON DELETE CASCADE`).
 
+**Authentication**
+
+```
+POST api/auth.php?action=login
+{ "email": "jane@example.com", "password": "..." }
+-> { "ok": true, "user": { ... }, "csrfToken": "..." }
+
+POST api/auth.php?action=logout
+-> { "ok": true }
+```
+
+The session is stored server-side; the browser receives only an
+HttpOnly session cookie. Registration requests are rejected in API
+mode. Every data request checks the session, and save/logout requests
+also check the CSRF token.
+
 ---
 
 ## Photos
@@ -112,9 +168,9 @@ Also check `upload_max_filesize` and `post_max_size` in
 `C:\xampp\php\php.ini` if large photos ever go missing. Restart
 Apache after changing them.
 
-`api/uploads/photos/` should stay writable by Apache. A blank
-`.htaccess` is not required, but if you later host this publicly,
-restrict that folder to image files only.
+`api/uploads/photos/` should stay writable by Apache. Direct web
+access to this folder is denied; images are returned through the
+authenticated API.
 
 ---
 
@@ -129,16 +185,14 @@ If you need row-by-row endpoints, or several people editing at
 once, swap `saveCollection()` in `api/index.php` and change
 `push()` in `js/backend.js`. Nothing else needs to know.
 
-## Going live
+## Before hosting publicly
 
-Set `API_SECRET` in `api/config.php` to a long random string, then
-send it from `js/backend.js` as an `X-Church-Key` header on both
-the bootstrap fetch and the POST. Any request without it is refused.
-Leave it as `''` while developing.
-
-`api/schema.sql` also creates a `users` table ready for real
-sign-in. The app ships with demo auth kept in the browser, so that
-is yours to wire up when you want password login.
+Use HTTPS, set a strong non-root database account in
+`api/config.php`, and set `API_DEBUG` to `false`. HTTPS is required
+for the session cookie to use its `Secure` flag. Keep the API and app
+on the same origin unless you also configure and test a strict CORS
+policy. Demo mode (`apiBase: ""`) is not server authentication and
+must not be used to protect real data.
 
 ## Troubleshooting
 
@@ -151,6 +205,8 @@ older copy of `js/backend.js` is cached. Ctrl+F5.
 **"Database connection failed"** — credentials in `api/config.php`,
 or the database was never imported.
 
-**"Could not reach ... running on this browser's storage instead"**
-— the API did not answer. The app keeps working locally; fix the
-server and refresh.
+**HTTP 401 / redirected to sign in** — no valid server session is
+present. Sign in with an account already in the `users` table.
+
+**"Could not load the database"** — the API did not answer. Check
+Apache, MySQL, and the database credentials, then reload.

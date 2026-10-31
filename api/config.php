@@ -25,13 +25,6 @@ define('UPLOAD_URL', 'api/uploads/photos');
 /* Uploaded photos larger than this are rejected (bytes). */
 define('MAX_PHOTO_BYTES', 4 * 1024 * 1024);
 
-/* ---------- safety ---------- */
-/* Optional shared secret. Leave '' to disable. If set, the front
-   end must send it as the X-Church-Key header (see js/backend.js)
-   and any request without it is refused. Use this if you put the
-   app on a public server. */
-define('API_SECRET', '');
-
 /* Set to false once you are happy, to silence warnings. */
 define('API_DEBUG', true);
 
@@ -104,15 +97,93 @@ function db() {
     return $pdo;
 }
 
-/* ---------- shared secret check ---------- */
-function check_secret() {
-    if (API_SECRET === '') {
+/* ---------- authenticated sessions ---------- */
+function start_app_session() {
+    if (session_status() === PHP_SESSION_ACTIVE) {
         return;
     }
-    $sent = isset($_SERVER['HTTP_X_CHURCH_KEY'])
-        ? $_SERVER['HTTP_X_CHURCH_KEY']
-        : '';
-    if (!hash_equals(API_SECRET, $sent)) {
-        json_fail('Not authorised.', 401);
+
+    ini_set('session.use_strict_mode', '1');
+    ini_set('session.use_only_cookies', '1');
+    ini_set('session.gc_maxlifetime', '28800');
+    session_name('CHURCHSESSID');
+    session_set_cookie_params(array(
+        'lifetime' => 0,
+        'path' => '/',
+        'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ));
+    session_start();
+
+    if (isset($_SESSION['user_id'], $_SESSION['last_activity'])
+        && time() - (int) $_SESSION['last_activity'] > 28800) {
+        $_SESSION = array();
+        session_regenerate_id(true);
     }
+
+    $_SESSION['last_activity'] = time();
+}
+
+function current_user() {
+    if (!isset($_SESSION['user_id'])) {
+        return null;
+    }
+
+    $stmt = db()->prepare(
+        'SELECT id, name, email, role FROM users WHERE id = ? LIMIT 1'
+    );
+    $stmt->execute(array((int) $_SESSION['user_id']));
+    $user = $stmt->fetch();
+    if (!$user) {
+        $_SESSION = array();
+        session_regenerate_id(true);
+        return null;
+    }
+
+    return array(
+        'id' => (int) $user['id'],
+        'name' => $user['name'],
+        'email' => $user['email'],
+        'role' => $user['role'],
+    );
+}
+
+function require_authenticated_user() {
+    start_app_session();
+    $user = current_user();
+    if (!$user) {
+        json_fail('Please sign in to continue.', 401);
+    }
+    return $user;
+}
+
+function ensure_csrf_token() {
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function require_csrf_token() {
+    $sent = isset($_SERVER['HTTP_X_CSRF_TOKEN'])
+        ? $_SERVER['HTTP_X_CSRF_TOKEN']
+        : '';
+    if (empty($_SESSION['csrf_token'])
+        || !hash_equals($_SESSION['csrf_token'], $sent)) {
+        json_fail('Your session expired. Please sign in again.', 403);
+    }
+}
+
+function destroy_app_session() {
+    $_SESSION = array();
+    $params = session_get_cookie_params();
+    setcookie(session_name(), '', array(
+        'expires' => time() - 42000,
+        'path' => $params['path'],
+        'secure' => $params['secure'],
+        'httponly' => $params['httponly'],
+        'samesite' => 'Lax',
+    ));
+    session_destroy();
 }

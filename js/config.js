@@ -20,5 +20,5 @@
    api/config.php on the PHP side.
    ============================================================ */
 window.CHURCH_CONFIG = {
-  apiBase: "",
+  apiBase: "api",
 };
