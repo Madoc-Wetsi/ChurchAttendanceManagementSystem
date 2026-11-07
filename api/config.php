@@ -16,10 +16,10 @@
    When you upload to InfinityFree, replace these four values with
    the ones saved in api/infinityfree.config.php, and import
    api/schema.sql into their database via phpMyAdmin.            */
-define('DB_HOST', '127.0.0.1');
-define('DB_NAME', 'church_attendance');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+define('DB_HOST', 'sql308.infinityfree.com');
+define('DB_NAME', 'if0_43064538_church_attendance');
+define('DB_USER', 'if0_43064538');
+define('DB_PASS', 'KRISHNAH123');
 define('DB_PORT', '3306');
 
 /* ---------- uploads ---------- */
