@@ -8,11 +8,18 @@
    the JSON contract) lives here so index.php stays readable.
    ============================================================ */
 
-/* ---------- database ---------- */
-define('DB_HOST', '127.0.0.1');   // XAMPP default. Use 'localhost' if preferred.
+/* ---------- database ----------
+   LOCAL DEVELOPMENT — points at the XAMPP MySQL that ships with
+   this machine. The church_attendance database and its tables
+   already exist there.
+
+   When you upload to InfinityFree, replace these four values with
+   the ones saved in api/infinityfree.config.php, and import
+   api/schema.sql into their database via phpMyAdmin.            */
+define('DB_HOST', '127.0.0.1');
 define('DB_NAME', 'church_attendance');
 define('DB_USER', 'root');
-define('DB_PASS', '');            // XAMPP ships with an empty root password.
+define('DB_PASS', '');
 define('DB_PORT', '3306');
 
 /* ---------- uploads ---------- */

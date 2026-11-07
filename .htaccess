@@ -1,0 +1,31 @@
+# ============================================================
+#  Firstlove Church, Godokpe Governorship
+# ------------------------------------------------------------
+#  Stop the browser from serving stale files.
+#
+#  Without these headers Apache sends only Last-Modified and
+#  ETag, so the browser is free to reuse an old copy of a .js
+#  or .css file without asking the server again. That is what
+#  causes a page to break after an edit until you remember to
+#  hard-refresh.
+#
+#  With no-cache the browser must revalidate on every load. The
+#  files are tiny, so this costs nothing and removes a whole
+#  class of confusing bugs.
+# ============================================================
+
+<IfModule mod_headers.c>
+    # Always revalidate; the ETag/Last-Modified check then makes
+    # an unchanged file a cheap 304 Not Modified.
+    Header set Cache-Control "no-cache, must-revalidate"
+
+    # Never let a proxy or the browser hold onto a copy.
+    Header unset Expires
+    Header unset Pragma
+</IfModule>
+
+# Default charset so HTML, JS and CSS all agree on UTF-8.
+AddDefaultCharset UTF-8
+
+# Directory listing off.
+Options -Indexes
